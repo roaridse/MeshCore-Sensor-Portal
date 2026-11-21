@@ -15,6 +15,7 @@ export class SerialCli {
     this.onStatus = onStatus;
     this.port = null;
     this.reader = null;
+    this.readTask = null;
     this.reading = false;
     this.pending = null;
     this.decoder = new TextDecoder();
@@ -49,7 +50,7 @@ export class SerialCli {
 
     this.receivedBytes = 0;
     this.reading = true;
-    void this.readLoop();
+    this.readTask = this.readLoop();
     await delay(100);
     return info;
   }
@@ -75,22 +76,41 @@ export class SerialCli {
     await delay(150);
   }
 
+  async reopen() {
+    if (!this.port) throw new Error("No USB device is selected.");
+    this.status("Closing and reopening the USB port to reset the CDC session.");
+    await this.stopReading();
+    if (this.port.setSignals) {
+      try {
+        await this.port.setSignals({ dataTerminalReady: false, requestToSend: false });
+      } catch { /* Optional modem-control signals. */ }
+    }
+    await this.port.close();
+    await delay(750);
+    await this.port.open({ baudRate: this.baudRate, bufferSize: 4096 });
+    await this.pulseTerminalSignals();
+    this.receivedBytes = 0;
+    this.decoder = new TextDecoder();
+    this.reading = true;
+    this.readTask = this.readLoop();
+    await delay(250);
+    await this.writeRaw("\r\n");
+    await delay(150);
+  }
+
   async probe(command = "ver", options = {}) {
     try {
       return await this.send(command, options);
     } catch (error) {
       if (error.code !== "CLI_NO_BYTES") throw error;
-      this.status("The first CLI test returned no bytes; retrying after a terminal wake-up.");
-      await this.wake();
+      this.status("The first CLI test returned no bytes; retrying with a fresh USB CDC session.");
+      await this.reopen();
       return this.send(command, options);
     }
   }
 
   async disconnect() {
-    this.reading = false;
-    if (this.reader) {
-      try { await this.reader.cancel(); } catch { /* Port may already be gone. */ }
-    }
+    await this.stopReading();
     if (this.port?.setSignals) {
       try { await this.port.setSignals({ dataTerminalReady: false, requestToSend: false }); } catch { /* Optional. */ }
     }
@@ -100,6 +120,15 @@ export class SerialCli {
     }
     this.finishPending(new Error("The port was disconnected."));
     this.status("The USB port is closed.");
+  }
+
+  async stopReading() {
+    this.reading = false;
+    if (this.reader) {
+      try { await this.reader.cancel(); } catch { /* Port may already be gone. */ }
+    }
+    try { await this.readTask; } catch { /* readLoop reports active-session errors itself. */ }
+    this.readTask = null;
   }
 
   async readLoop() {
