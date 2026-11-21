@@ -23,14 +23,14 @@ const reply = await transport.send("ruuvi scan");
 await transport.disconnect();
 ```
 
-`SerialCli` is the first adapter and communicates directly with the sensor
-node's text CLI at 115200 baud. A future `CompanionRemoteCli` will use
-`meshcore.js`, select a contact, authenticate the administrator, and send the
-same command over MeshCore.
+`SerialCli` communicates directly with the sensor node's text CLI at 115200
+baud. `CompanionRemoteCli` uses the official `meshcore.js` client over Web
+Bluetooth or Web Serial, selects a sensor contact, authenticates the
+administrator, and sends the same command as `TXT_TYPE_CLI_DATA` over MeshCore.
 
-The UI code must not need to know whether a command was sent directly or over
-the mesh. The remote adapter must use longer timeouts and handle short or
-fragmented responses.
+The UI code does not need to know whether a command was sent directly or over
+the mesh. The remote adapter uses longer timeouts and drains asynchronous
+replies from the Companion message queue.
 
 ## Firmware catalog
 
@@ -64,6 +64,5 @@ names in JavaScript.
 
 1. Generated checksums and Release manifests from the firmware repository.
 2. A stable, versioned, and machine-readable sensor CLI.
-3. Companion access over Web Serial and Web Bluetooth using `meshcore.js`.
-4. Remote CLI, contact discovery, and administrator authentication.
-5. More boards and profiles for wired sensors.
+3. Delivery confirmation and retry controls for unreliable remote routes.
+4. More boards and profiles for wired sensors.

@@ -4,9 +4,10 @@ import { join } from "node:path";
 
 const root = new URL("../", import.meta.url).pathname;
 const required = [
-  "index.html", "assets/styles.css", "src/app.js", "src/serial.js", "src/flasher.js",
+  "index.html", "assets/styles.css", "src/app.js", "src/serial.js", "src/companion.js", "src/flasher.js",
   "catalog/firmware.json", "scripts/serve.mjs", "vendor/meshcore-flasher/dfu.js",
   "vendor/meshcore-flasher/zip.min.js", "vendor/meshcore-flasher/NOTICE.md",
+  "vendor/meshcore/meshcore.js", "vendor/meshcore/NOTICE.md", "vendor/meshcore/LICENSE",
   "firmware/FLASH_ERASE_nrf52_softdevice_v6.zip",
   "firmware/RAK4631-BLE-Sensor-v0.3.1.zip", "firmware/RAK4631-BLE-Sensor-v0.3.1.uf2"
 ];

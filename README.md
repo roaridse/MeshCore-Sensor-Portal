@@ -1,12 +1,13 @@
 # MeshCore Sensor Portal
 
 A static web portal for finding firmware and configuring MeshCore sensor nodes.
-All USB communication takes place locally in the browser. The portal has no
-backend and does not send sensor data, channel keys, or Victron keys to a server.
+All device communication takes place locally in the browser. The portal has no
+backend and does not send sensor data, passwords, channel keys, or Victron keys
+to a server.
 
 ## Status
 
-The first development version includes:
+Version 0.2 includes:
 
 - a machine-readable firmware catalog;
 - selection of profile, board, and firmware version;
@@ -17,12 +18,26 @@ The first development version includes:
 - a local DFU ZIP option as an alternative to a public GitHub Release;
 - bundled, checksum-verified v0.3.1 DFU ZIP and UF2 files for private testing;
 - direct connection to the sensor firmware through Web Serial at 115200 baud;
+- connection to a MeshCore Companion through Web Bluetooth or Web Serial;
+- sensor contact discovery and authenticated remote administrator login;
+- remote configuration through MeshCore CLI data messages;
 - configuration of the node name, Ruuvi, Shelly, Victron, and private status channel;
 - a general-purpose CLI console;
 - editing of sensitive fields without storing or logging the keys locally.
 
-Remote configuration through a MeshCore Companion is planned, but is not
-enabled in this version.
+## Configuring through a Companion
+
+1. Select **Via Companion** under Connection.
+2. Choose Bluetooth or USB serial and connect to the Companion node.
+3. Select a sensor from the Companion's sensor contacts.
+4. Enter the sensor administrator password and log in.
+5. Use the same configuration forms and console as for direct USB.
+
+The sensor must already be present in the Companion contact list and advertise
+as a MeshCore sensor. Remote commands use `TXT_TYPE_CLI_DATA`; replies can take
+longer than direct USB because they travel over the mesh. Do not use another app
+with the same Companion at the same time, since Companion messages are consumed
+from a shared queue.
 
 ## Flashing a RAK4631
 
@@ -73,9 +88,10 @@ artifacts.
 
 ## Browser support
 
-Direct USB access requires Web Serial, which is normally available in desktop
-versions of Chrome and Edge. Firefox and Safari do not support Web Serial. Only
-one program or browser tab can own the USB port at a time.
+Direct USB and USB Companion access require Web Serial. Bluetooth Companion
+access requires Web Bluetooth. These APIs are normally available in desktop
+versions of Chrome and Edge; Firefox and Safari do not support them. Only one
+program or browser tab can own the device connection at a time.
 
 After connecting, the portal automatically sends `ver`. The heading displays
 either **USB and CLI ready** or **Port open — no CLI response**. The CLI console
@@ -90,9 +106,8 @@ started. Look for a new serial port or the bootloader LED before flashing.
 
 1. Add SHA-256 sums and manifest generation to the firmware workflow.
 2. Add a versioned, machine-readable CLI to the sensor firmware.
-3. Integrate `meshcore.js` for Companion access over Web Serial/Web Bluetooth.
-4. Implement authenticated remote CLI access to selected sensor nodes.
-5. Add more boards and sensor profiles through the catalog.
+3. Add delivery confirmation and retry controls for unreliable remote routes.
+4. Add more boards and sensor profiles through the catalog.
 
 See the [architecture](docs/ARCHITECTURE.md) for the interface between the
 firmware, portal, and transport adapters.
@@ -110,3 +125,7 @@ directory.
 The nRF52 DFU engine is reused from the official MeshCore flasher. Its license,
 upstream commit, and the formatter's origin are documented in
 [`vendor/meshcore-flasher/NOTICE.md`](vendor/meshcore-flasher/NOTICE.md).
+
+Companion communication uses a browser bundle of the official `meshcore.js`
+client. Its version, origin, and license are documented in
+[`vendor/meshcore/NOTICE.md`](vendor/meshcore/NOTICE.md).

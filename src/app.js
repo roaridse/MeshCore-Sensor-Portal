@@ -1,5 +1,6 @@
 import { SerialCli } from "./serial.js";
 import { Nrf52Flasher } from "./flasher.js";
+import { CompanionRemoteCli, bytesToHex } from "./companion.js";
 
 const elements = Object.fromEntries([
   "connectionDot", "connectionText", "firmwareCount", "catalogStatus", "profileSelect",
@@ -8,6 +9,8 @@ const elements = Object.fromEntries([
   "flashProgressWrap", "flashStatus", "flashPercent", "flashProgress", "flashLog", "eraseDialog",
   "eraseConfirmation", "confirmEraseButton",
   "serialSupport", "deviceName", "deviceDetail", "connectButton", "disconnectButton",
+  "companionConnection", "companionMethod", "remoteLogin", "sensorContact", "remotePassword",
+  "remoteLoginButton", "refreshContactsButton",
   "commandResult", "consoleOutput", "consoleForm", "consoleCommand", "clearConsole", "toast"
 ].map((id) => [id, document.getElementById(id)]));
 
@@ -15,11 +18,19 @@ let catalog = null;
 let toastTimer = null;
 let suppressConsoleData = false;
 let flashBusy = false;
+let transportMode = "serial";
 
 const serial = new SerialCli({
   onData: (text) => { if (!suppressConsoleData) appendConsole(text); },
   onDisconnect: () => setConnected(false, "The USB device was disconnected"),
   onStatus: ({ timestamp, message }) => appendConsole(`\n[USB ${formatTime(timestamp)}] ${message}\n`)
+});
+const companion = new CompanionRemoteCli({
+  onData: (text) => { if (!suppressConsoleData) appendConsole(text); },
+  onDisconnect: () => {
+    if (transportMode === "companion") setConnected(false, "The Companion was disconnected");
+  },
+  onStatus: ({ timestamp, message }) => appendConsole(`\n[Companion ${formatTime(timestamp)}] ${message}\n`)
 });
 const flasher = new Nrf52Flasher({ onLog: appendFlashLog });
 
@@ -110,42 +121,30 @@ function fillSelect(select, options) {
 }
 
 function setupConnection() {
-  if (SerialCli.supported()) {
-    elements.serialSupport.textContent = "Web Serial available";
-    elements.serialSupport.classList.add("good");
-  } else {
-    elements.serialSupport.textContent = "Web Serial unavailable";
-    elements.serialSupport.classList.add("warn");
-    elements.connectButton.disabled = true;
-    elements.deviceDetail.textContent = "Use Chrome or Edge on a desktop computer.";
-  }
+  renderConnectionMode();
+
+  document.querySelectorAll("input[name='mode']").forEach((input) => {
+    input.addEventListener("change", async () => {
+      if (!input.checked || input.value === transportMode) return;
+      try {
+        await currentTransport().disconnect();
+      } catch (error) {
+        appendConsole(`\n[Disconnect warning: ${error.message}]\n`);
+      }
+      transportMode = input.value;
+      document.querySelectorAll(".mode-option").forEach((label) => label.classList.toggle("active", label.contains(input)));
+      setConnected(false);
+      renderConnectionMode();
+    });
+  });
+
+  elements.companionMethod.addEventListener("change", renderConnectionMode);
 
   elements.connectButton.addEventListener("click", async () => {
     try {
       elements.connectButton.disabled = true;
-      const info = await serial.connect();
-      const id = [info.usbVendorId, info.usbProductId].every(Number.isInteger)
-        ? `${hex4(info.usbVendorId)}:${hex4(info.usbProductId)}` : "USB serial";
-      setConnected(true, id);
-      appendConsole("\n[USB connected]\n");
-      elements.connectionText.textContent = "Port open – testing CLI";
-      elements.deviceDetail.textContent = `${id} · sending ver`;
-      appendConsole("\n› ver (automatic connection test)\n");
-      try {
-        const reply = await serial.send("ver", { idleMs: 650, timeoutMs: 4000 });
-        elements.connectionText.textContent = "USB and CLI ready";
-        elements.deviceDetail.textContent = `${id} · CLI responded${reply ? `: ${firstLine(reply)}` : ""}`;
-        elements.connectionDot.classList.remove("warning");
-        elements.connectionDot.classList.add("connected");
-        showToast("The sensor node CLI is responding");
-      } catch (probeError) {
-        elements.connectionText.textContent = "Port open – no CLI response";
-        elements.deviceDetail.textContent = `${id} · ${probeError.message}`;
-        elements.connectionDot.classList.remove("connected");
-        elements.connectionDot.classList.add("warning");
-        appendConsole(`\n[CLI test failed] ${probeError.message}\n`);
-        showToast("The port opened, but the CLI did not respond", true);
-      }
+      if (transportMode === "serial") await connectDirectUsb();
+      else await connectCompanion();
     } catch (error) {
       elements.connectButton.disabled = false;
       showError(error);
@@ -153,10 +152,108 @@ function setupConnection() {
   });
 
   elements.disconnectButton.addEventListener("click", async () => {
-    await serial.disconnect();
+    await currentTransport().disconnect();
     setConnected(false);
-    appendConsole("\n[USB disconnected]\n");
+    appendConsole(`\n[${transportMode === "serial" ? "USB" : "Companion"} disconnected]\n`);
   });
+
+  elements.refreshContactsButton.addEventListener("click", async () => {
+    try {
+      populateSensorContacts(await companion.refreshContacts());
+      showToast("Companion contacts refreshed");
+    } catch (error) {
+      showError(error);
+    }
+  });
+
+  elements.sensorContact.addEventListener("change", () => {
+    if (!elements.sensorContact.value) return;
+    companion.selectContact(elements.sensorContact.value);
+    setConnected(true, "Enter the sensor administrator password", { ready: false, name: "Companion connected" });
+  });
+
+  elements.remoteLoginButton.addEventListener("click", async () => {
+    try {
+      elements.remoteLoginButton.disabled = true;
+      companion.selectContact(elements.sensorContact.value);
+      const contact = await companion.login(elements.remotePassword.value);
+      elements.remotePassword.value = "";
+      setConnected(true, `${contact.advName || "Sensor"} · authenticated remote CLI`, { ready: true, name: contact.advName || "Remote sensor" });
+      appendConsole(`\n[Remote CLI authenticated: ${contact.advName || bytesToHex(contact.publicKey.subarray(0, 6))}]\n`);
+      showToast("Remote sensor CLI is ready");
+    } catch (error) {
+      elements.remotePassword.value = "";
+      showError(error);
+    } finally {
+      elements.remoteLoginButton.disabled = false;
+    }
+  });
+}
+
+async function connectDirectUsb() {
+  const info = await serial.connect();
+  const id = [info.usbVendorId, info.usbProductId].every(Number.isInteger)
+    ? `${hex4(info.usbVendorId)}:${hex4(info.usbProductId)}` : "USB serial";
+  setConnected(true, id, { ready: true, name: "Sensor node connected" });
+  appendConsole("\n[USB connected]\n");
+  elements.connectionText.textContent = "Port open – testing CLI";
+  elements.deviceDetail.textContent = `${id} · sending ver`;
+  appendConsole("\n› ver (automatic connection test)\n");
+  try {
+    const reply = await serial.send("ver", { idleMs: 650, timeoutMs: 4000 });
+    elements.connectionText.textContent = "USB and CLI ready";
+    elements.deviceDetail.textContent = `${id} · CLI responded${reply ? `: ${firstLine(reply)}` : ""}`;
+    showToast("The sensor node CLI is responding");
+  } catch (probeError) {
+    elements.connectionText.textContent = "Port open – no CLI response";
+    elements.deviceDetail.textContent = `${id} · ${probeError.message}`;
+    elements.connectionDot.classList.remove("connected");
+    elements.connectionDot.classList.add("warning");
+    appendConsole(`\n[CLI test failed] ${probeError.message}\n`);
+    showToast("The port opened, but the CLI did not respond", true);
+  }
+}
+
+async function connectCompanion() {
+  const contacts = await companion.connect(elements.companionMethod.value);
+  populateSensorContacts(contacts);
+  elements.remoteLogin.hidden = false;
+  setConnected(true, contacts.length ? "Select a sensor contact and log in" : "No contacts found on this Companion", { ready: false, name: "Companion connected" });
+  appendConsole(`\n[Companion connected · ${contacts.length} contact${contacts.length === 1 ? "" : "s"}]\n`);
+  showToast("Companion connected");
+}
+
+function populateSensorContacts(contacts) {
+  const options = contacts.map((contact) => {
+    const prefix = bytesToHex(contact.publicKey.subarray(0, 6)).toUpperCase();
+    return [bytesToHex(contact.publicKey), `${contact.advName || "Unnamed contact"} · ${prefix}`];
+  });
+  fillSelect(elements.sensorContact, options.length ? options : [["", "No sensor contacts found"]]);
+  elements.remoteLoginButton.disabled = options.length === 0;
+}
+
+function renderConnectionMode() {
+  const companionMode = transportMode === "companion";
+  elements.companionConnection.hidden = !companionMode;
+  if (!companionMode) elements.remoteLogin.hidden = true;
+  const method = companionMode ? elements.companionMethod.value : "serial";
+  const supported = companionMode ? CompanionRemoteCli.supported(method) : SerialCli.supported();
+  const methodName = method === "bluetooth" ? "Web Bluetooth" : "Web Serial";
+  elements.serialSupport.textContent = `${methodName} ${supported ? "available" : "unavailable"}`;
+  elements.serialSupport.classList.toggle("good", supported);
+  elements.serialSupport.classList.toggle("warn", !supported);
+  elements.connectButton.textContent = companionMode ? "Connect to Companion" : "Select USB port";
+  elements.connectButton.disabled = flashBusy || currentTransport().connected || !supported;
+  if (!currentTransport().connected) {
+    elements.deviceName.textContent = companionMode ? "No Companion connected" : "No port selected";
+    elements.deviceDetail.textContent = supported
+      ? (companionMode ? "Choose Bluetooth or the Companion's USB serial port." : "Connect the sensor node with a USB data cable.")
+      : `Use a desktop version of Chrome or Edge with ${methodName}.`;
+  }
+}
+
+function currentTransport() {
+  return transportMode === "companion" ? companion : serial;
 }
 
 function setupFlasher() {
@@ -245,7 +342,10 @@ async function runFlashOperation(initialStatus, operation) {
 function setFlashBusy(busy) {
   flashBusy = busy;
   updateFlashControls();
-  elements.connectButton.disabled = busy || serial.connected || !SerialCli.supported();
+  const supported = transportMode === "companion"
+    ? CompanionRemoteCli.supported(elements.companionMethod.value)
+    : SerialCli.supported();
+  elements.connectButton.disabled = busy || currentTransport().connected || !supported;
 }
 
 function updateFlashControls() {
@@ -272,19 +372,23 @@ function friendlyFlashError(error) {
   return error?.message || "Unknown flashing error.";
 }
 
-function setConnected(connected, detail = "") {
-  elements.connectionDot.classList.toggle("connected", connected);
-  elements.connectionDot.classList.remove("warning");
-  elements.connectionText.textContent = connected ? "USB connected" : "No device connected";
-  elements.deviceName.textContent = connected ? "Sensor node connected" : "No port selected";
-  elements.deviceDetail.textContent = connected ? detail : (detail || "Connect the sensor node with a USB data cable.");
-  elements.connectButton.disabled = flashBusy || connected || !SerialCli.supported();
+function setConnected(connected, detail = "", { ready = connected, name = "Sensor node connected" } = {}) {
+  const remote = transportMode === "companion";
+  elements.connectionDot.classList.toggle("connected", ready);
+  elements.connectionDot.classList.toggle("warning", connected && !ready);
+  elements.connectionText.textContent = ready ? (remote ? "Remote sensor ready" : "USB connected") : (connected ? "Companion connected – login required" : "No device connected");
+  elements.deviceName.textContent = connected ? name : (remote ? "No Companion connected" : "No port selected");
+  elements.deviceDetail.textContent = connected ? detail : (detail || (remote ? "Connect to a MeshCore Companion to find sensors." : "Connect the sensor node with a USB data cable."));
+  const supported = remote ? CompanionRemoteCli.supported(elements.companionMethod.value) : SerialCli.supported();
+  elements.connectButton.disabled = flashBusy || connected || !supported;
+  elements.companionMethod.disabled = remote && connected;
   elements.disconnectButton.disabled = !connected;
-  document.querySelectorAll("[data-command], [data-command-form] button[type='submit'], #consoleForm button").forEach((node) => { node.disabled = !connected; });
+  document.querySelectorAll("[data-command], [data-command-form] button[type='submit'], #consoleForm button").forEach((node) => { node.disabled = !ready; });
   document.querySelectorAll(".requires-connection").forEach((node) => {
-    node.textContent = connected ? "USB connected" : "USB required";
-    node.classList.toggle("good", connected);
+    node.textContent = ready ? (remote ? "Remote sensor ready" : "USB connected") : (remote ? "Companion login required" : "USB required");
+    node.classList.toggle("good", ready);
   });
+  if (!connected && remote) elements.remoteLogin.hidden = true;
 }
 
 function setupTabs() {
@@ -339,10 +443,13 @@ async function runCommand(command, { sensitive = false, slow = false } = {}) {
   elements.commandResult.textContent = "Waiting for a response …";
   try {
     suppressConsoleData = sensitive;
-    const reply = await serial.send(command, slow ? { idleMs: 900, timeoutMs: 12000 } : undefined);
+    const options = transportMode === "companion"
+      ? { timeoutMs: slow ? 60000 : 45000 }
+      : (slow ? { idleMs: 900, timeoutMs: 12000 } : undefined);
+    const reply = await currentTransport().send(command, options);
     const safeReply = sensitive ? reply.replaceAll(command, shownCommand) : reply;
     elements.commandResult.textContent = safeReply || "Command sent. The device returned no text response.";
-    elements.connectionText.textContent = "USB and CLI ready";
+    elements.connectionText.textContent = transportMode === "companion" ? "Remote sensor ready" : "USB and CLI ready";
     elements.connectionDot.classList.remove("warning");
     elements.connectionDot.classList.add("connected");
     showToast("Command completed");

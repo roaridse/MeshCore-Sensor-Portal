@@ -21,10 +21,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - run: npm ci
+      - run: npm run build:meshcore
+      - run: git diff --exit-code -- vendor/meshcore/meshcore.js
       - run: npm run check
       - run: npm test
       - run: node --check src/app.js
       - run: node --check src/serial.js
+      - run: node --check src/companion.js
       - run: node --check src/flasher.js
       - run: node --check vendor/meshcore-flasher/dfu.js
 

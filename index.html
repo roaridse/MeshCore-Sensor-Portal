@@ -24,14 +24,14 @@
     <main id="top">
       <section class="hero">
         <div>
-          <p class="eyebrow">Everything runs locally in your browser</p>
-          <h1>Firmware and setup,<br><span>without extra software.</span></h1>
-          <p class="hero-copy">Select a sensor node, get the correct firmware, and configure it over USB. Keys and passwords are never sent to a server.</p>
+          <p class="eyebrow">MeshCore sensor firmware for RAK WisBlock</p>
+          <h1>Turn a RAK4631 into a<br><span>MeshCore sensor node.</span></h1>
+          <p class="hero-copy">Firmware v0.3.1 reads Victron Instant Readout, Ruuvi RAWv2, and Shelly BLU H&amp;T over Bluetooth. Sensor values are sent through MeshCore as Cayenne LPP, with a private status channel for node updates.</p>
         </div>
         <div class="hero-status" aria-label="Portal status">
           <div><strong id="firmwareCount">–</strong><span>firmware packages</span></div>
-          <div><strong>USB</strong><span>direct CLI</span></div>
-          <div><strong class="muted">Next</strong><span>remote Companion</span></div>
+          <div><strong>RAK4631</strong><span>nRF52840 board</span></div>
+          <div><strong>3</strong><span>BLE sensor types</span></div>
         </div>
       </section>
 
@@ -101,19 +101,44 @@
         <div>
           <p class="eyebrow">Connection</p>
           <h2>Connect to the sensor node</h2>
-          <p>Direct USB uses Web Serial at 115200 baud. Chrome or Edge is required, and no other terminal may keep the port open.</p>
+          <p>Use USB when the sensor is beside you, or connect through a MeshCore Companion to configure a sensor over the mesh.</p>
           <div class="mode-list" role="radiogroup" aria-label="Connection method">
-            <label class="mode-option active"><input type="radio" name="mode" value="serial" checked><span><strong>Direct USB</strong><small>Available now</small></span></label>
-            <label class="mode-option disabled"><input type="radio" name="mode" value="remote" disabled><span><strong>Via Companion</strong><small>Planned next</small></span></label>
+            <label class="mode-option active"><input type="radio" name="mode" value="serial" checked><span><strong>Direct USB</strong><small>Sensor connected to this computer</small></span></label>
+            <label class="mode-option"><input type="radio" name="mode" value="companion"><span><strong>Via Companion</strong><small>Remote CLI over MeshCore</small></span></label>
           </div>
         </div>
         <div class="connect-card">
           <span id="serialSupport" class="pill">Checking browser</span>
           <h3 id="deviceName">No port selected</h3>
           <p id="deviceDetail">Connect the sensor node with a USB data cable.</p>
+          <div id="companionConnection" class="companion-fields" hidden>
+            <div class="field-group">
+              <label for="companionMethod">Connect to Companion with</label>
+              <select id="companionMethod">
+                <option value="bluetooth">Bluetooth</option>
+                <option value="serial">USB serial</option>
+              </select>
+            </div>
+          </div>
           <div class="actions vertical-mobile">
             <button id="connectButton" class="button primary" type="button">Select USB port</button>
             <button id="disconnectButton" class="button secondary" type="button" disabled>Disconnect</button>
+          </div>
+          <div id="remoteLogin" class="remote-login" hidden>
+            <div class="remote-heading">
+              <h3>Select remote sensor</h3>
+              <button id="refreshContactsButton" class="text-button" type="button">Refresh contacts</button>
+            </div>
+            <div class="field-group">
+              <label for="sensorContact">Sensor contact</label>
+              <select id="sensorContact"></select>
+            </div>
+            <div class="field-group">
+              <label for="remotePassword">Sensor admin password</label>
+              <input id="remotePassword" type="password" autocomplete="off" placeholder="Administrator password">
+            </div>
+            <button id="remoteLoginButton" class="button primary" type="button">Log in to sensor</button>
+            <p class="note">The password is sent through MeshCore's administrator login and is not stored by the portal.</p>
           </div>
         </div>
       </section>
