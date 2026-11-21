@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-11-21",
+  "packages": [
+    {
+      "profile": {
+        "id": "universal-ble",
+        "name": "Universal BLE-sensornode"
+      },
+      "board": {
+        "id": "rak4631",
+        "name": "RAK WisBlock RAK4631",
+        "mcu": "nRF52840",
+        "flashMethod": "nrf52-dfu-or-uf2"
+      },
+      "version": "v0.3.1",
+      "environment": "RAK_4631_victron_sensor",
+      "description": "MeshCore-sensornode for Victron Instant Readout, Ruuvi RAWv2 og Shelly BLU H&T.",
+      "features": ["Victron", "Ruuvi", "Shelly", "Cayenne LPP", "Privat statuskanal"],
+      "validation": "hardware-partial",
+      "source": "https://github.com/roaridse/MeshCore-VictronBLE",
+      "assets": {
+        "uf2": {
+          "url": "firmware/RAK4631-BLE-Sensor-v0.3.1.uf2",
+          "sha256": "159f0739185dc2597fd041e142e22afc22d9fc49231330b7fa0ea0e1d46db1f9"
+        },
+        "dfu": {
+          "url": "firmware/RAK4631-BLE-Sensor-v0.3.1.zip",
+          "sha256": "07aef2a0d36e6be1d84ba40d0c6319d2315a3955cd539795395f22d0268b5210"
+        },
+        "erase": {
+          "url": "firmware/FLASH_ERASE_nrf52_softdevice_v6.zip",
+          "sha256": "68cd6f6e5008f06b7de0b60288750f177e9a59c1e799063cdbfa47ea70ee835c",
+          "description": "MeshCore nRF52 SoftDevice v6 formatter for RAK4631"
+        },
+        "hex": {
+          "url": "https://github.com/roaridse/MeshCore-VictronBLE/releases/download/v0.3.1/RAK4631-BLE-Sensor-v0.3.1.hex",
+          "sha256": null
+        }
+      }
+    }
+  ]
+}
