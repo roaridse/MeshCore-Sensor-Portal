@@ -112,6 +112,9 @@ started. Look for a new serial port or the bootloader LED before flashing.
 See the [architecture](docs/ARCHITECTURE.md) for the interface between the
 firmware, portal, and transport adapters.
 
+See [firmware release automation](docs/FIRMWARE_AUTOMATION.md) for the manifest
+sync flow and the required one-time GitHub configuration.
+
 ## GitHub Pages
 
 The `.github/workflows/pages.yml` workflow validates the portal on pull requests

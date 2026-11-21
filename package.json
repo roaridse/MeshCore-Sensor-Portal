@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "build:meshcore": "node scripts/build-meshcore.mjs",
+    "build:site": "node scripts/prepare-site.mjs --output _site",
     "check": "node scripts/check.mjs",
-    "test": "node tests/flasher.test.mjs && node tests/serial.test.mjs && node tests/companion.test.mjs",
+    "sync:firmware": "node scripts/sync-firmware.mjs",
+    "test": "node tests/flasher.test.mjs && node tests/serial.test.mjs && node tests/companion.test.mjs && node tests/firmware-sync.test.mjs",
     "serve": "node scripts/serve.mjs"
   },
   "dependencies": {

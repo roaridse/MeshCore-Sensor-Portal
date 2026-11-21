@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  repository_dispatch:
+    types: [firmware_released]
+  schedule:
+    - cron: "17 3 * * *"
 
 permissions:
   contents: read
@@ -45,9 +49,21 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prepare static Pages artifact
+        run: npm run build:site
+      - name: Synchronize firmware releases
+        env:
+          FIRMWARE_REPOSITORY: roaridse/MeshCore-VictronBLE
+          FIRMWARE_REPO_TOKEN: ${{ secrets.FIRMWARE_REPO_TOKEN || github.token }}
+        run: npm run sync:firmware -- --site _site --keep 3
+      - name: Validate synchronized site
+        run: node scripts/check.mjs _site --site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
