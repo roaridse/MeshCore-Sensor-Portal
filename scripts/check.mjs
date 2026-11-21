@@ -6,7 +6,7 @@ const sourceRoot = new URL("../", import.meta.url).pathname;
 const root = process.argv[2] ? resolve(process.argv[2]) : sourceRoot;
 const siteMode = process.argv.includes("--site");
 const required = [
-  "index.html", "docs.html", "status.html", "assets/styles.css", "src/app.js", "src/serial.js", "src/companion.js", "src/flasher.js",
+  "index.html", "docs.html", "status.html", "assets/styles.css", "src/app.js", "src/analytics.js", "src/serial.js", "src/companion.js", "src/flasher.js",
   "catalog/firmware.json", "vendor/meshcore-flasher/dfu.js",
   "vendor/meshcore-flasher/zip.min.js", "vendor/meshcore-flasher/NOTICE.md",
   "vendor/meshcore/meshcore.js", "vendor/meshcore/NOTICE.md", "vendor/meshcore/LICENSE",
@@ -30,6 +30,10 @@ for (const marker of ["id=\"commands\"", "id=\"telemetry\"", "id=\"status-channe
 const statusHtml = await readFile(join(root, "status.html"), "utf8");
 for (const marker of ["id=\"boards\"", "id=\"sensors\"", "RAK4631", "RuuviTag", "Shelly BLU H&amp;T", "SmartSolar MPPT 100/20"]) {
   if (!statusHtml.includes(marker)) throw new Error(`Missing ${marker} in status.html`);
+}
+for (const [file, page] of [["index.html", html], ["docs.html", docsHtml], ["status.html", statusHtml]]) {
+  if (!page.includes("src/analytics.js")) throw new Error(`Missing GoatCounter loader in ${file}`);
+  if (siteMode && page.includes("GOATCOUNTER_SITE_CODE")) throw new Error(`Unresolved GoatCounter placeholder in ${file}`);
 }
 
 const catalog = JSON.parse(await readFile(join(root, "catalog/firmware.json"), "utf8"));

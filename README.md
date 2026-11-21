@@ -123,6 +123,14 @@ source in the repository settings before the first deployment. A Pages site is
 normally public; do not place secrets or private firmware files in the published
 directory.
 
+### GoatCounter analytics
+
+The published site supports GoatCounter without tracking local development
+sessions. Create a GoatCounter account, then add an Actions repository variable
+named `GOATCOUNTER_SITE_CODE` containing only the account/site code (for example
+`meshcore-sensor-portal`, not the full URL). The Pages build injects the code
+into every public page. Analytics remains disabled when the variable is unset.
+
 ## Third-party code
 
 The nRF52 DFU engine is reused from the official MeshCore flasher. Its license,

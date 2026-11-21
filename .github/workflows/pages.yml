@@ -31,6 +31,7 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: node --check src/app.js
+      - run: node --check src/analytics.js
       - run: node --check src/serial.js
       - run: node --check src/companion.js
       - run: node --check src/flasher.js
@@ -49,6 +50,8 @@ jobs:
         with:
           node-version: 22
       - name: Prepare static Pages artifact
+        env:
+          GOATCOUNTER_SITE_CODE: ${{ vars.GOATCOUNTER_SITE_CODE }}
         run: npm run build:site
       - name: Synchronize firmware releases
         env:
