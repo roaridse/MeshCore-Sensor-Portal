@@ -200,7 +200,7 @@ async function connectDirectUsb() {
   elements.deviceDetail.textContent = `${id} · sending ver`;
   appendConsole("\n› ver (automatic connection test)\n");
   try {
-    const reply = await serial.send("ver", { idleMs: 650, timeoutMs: 4000 });
+    const reply = await serial.probe("ver", { idleMs: 650, timeoutMs: 4000 });
     elements.connectionText.textContent = "USB and CLI ready";
     elements.deviceDetail.textContent = `${id} · CLI responded${reply ? `: ${firstLine(reply)}` : ""}`;
     showToast("The sensor node CLI is responding");

@@ -28,7 +28,21 @@ assert.equal(portRole({ usbVendorId: 0x239a, usbProductId: 0x0029 }), "bootloade
 
 await assert.rejects(
   cli.send("status", { timeoutMs: 5 }),
-  /received no bytes/
+  (error) => error.code === "CLI_NO_BYTES" && /received no bytes/.test(error.message)
 );
 
-console.log("Serial CLI writer, response, and timeout tests passed.");
+const signalStates = [];
+written = "";
+cli.port.setSignals = async (state) => signalStates.push(state);
+await cli.wake();
+assert.deepEqual(signalStates, [
+  { dataTerminalReady: false, requestToSend: false },
+  { dataTerminalReady: true, requestToSend: true }
+]);
+assert.equal(written, "\r\n", "wake-up must send an empty terminal line");
+
+cli.portInfo = { usbVendorId: 0x239a, usbProductId: 0x8029 };
+const staleVersionError = await cli.send("status", { timeoutMs: 5 }).catch((error) => error);
+assert.doesNotMatch(staleVersionError.message, /v0\.3\.1/);
+
+console.log("Serial CLI writer, wake-up, response, and timeout tests passed.");

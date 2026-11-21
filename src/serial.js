@@ -41,22 +41,49 @@ export class SerialCli {
     this.status(`Opening ${formatPortInfo(info)} at ${this.baudRate} baud.`);
     await this.port.open({ baudRate: this.baudRate, bufferSize: 4096 });
 
-    // Match normal serial terminal behaviour. Some USB CDC implementations do
-    // not deliver console data until DTR is asserted. setSignals is optional.
-    if (this.port.setSignals) {
-      try {
-        await this.port.setSignals({ dataTerminalReady: true, requestToSend: false });
-        this.status("DTR asserted; the USB port is open.");
-      } catch (error) {
-        this.status(`The port does not support DTR signals (${error.message}).`);
-      }
-    }
+    // Match terminal programs such as minicom: start with both modem-control
+    // lines low, then assert DTR and RTS. TinyUSB treats DTR as the CDC
+    // connection state, and some Linux/USB combinations need a real edge here
+    // rather than receiving the already-active state once.
+    await this.pulseTerminalSignals();
 
     this.receivedBytes = 0;
     this.reading = true;
     void this.readLoop();
     await delay(100);
     return info;
+  }
+
+  async pulseTerminalSignals() {
+    if (!this.port?.setSignals) return;
+    try {
+      await this.port.setSignals({ dataTerminalReady: false, requestToSend: false });
+      await delay(75);
+      await this.port.setSignals({ dataTerminalReady: true, requestToSend: true });
+      this.status("DTR and RTS asserted; the USB CDC connection is active.");
+    } catch (error) {
+      this.status(`The port does not support DTR/RTS signals (${error.message}).`);
+    }
+  }
+
+  async wake() {
+    if (!this.connected) throw new Error("No USB device is connected.");
+    this.status("Waking the USB CLI with a new terminal session.");
+    await this.pulseTerminalSignals();
+    await delay(100);
+    await this.writeRaw("\r\n");
+    await delay(150);
+  }
+
+  async probe(command = "ver", options = {}) {
+    try {
+      return await this.send(command, options);
+    } catch (error) {
+      if (error.code !== "CLI_NO_BYTES") throw error;
+      this.status("The first CLI test returned no bytes; retrying after a terminal wake-up.");
+      await this.wake();
+      return this.send(command, options);
+    }
   }
 
   async disconnect() {
@@ -129,22 +156,30 @@ export class SerialCli {
         const detail = received === 0
           ? noBytesMessage(this.portInfo)
           : `The port received ${received} bytes, but the response did not finish.`;
-        this.finishPending(new Error(detail));
+        const error = new Error(detail);
+        if (received === 0) error.code = "CLI_NO_BYTES";
+        this.finishPending(error);
       }, timeoutMs);
       this.pending = { resolve, reject, output: "", command: normalized, idleMs, idleTimer: null, timeoutTimer };
 
-      let writer;
       try {
-        writer = this.port.writable.getWriter();
-        const payload = new TextEncoder().encode(`${normalized}\r\n`);
-        await writer.write(payload);
-        this.status(`Sent ${payload.byteLength} bytes to the CLI.`);
+        await this.writeRaw(`${normalized}\r\n`);
       } catch (error) {
         this.finishPending(error);
-      } finally {
-        try { writer?.releaseLock(); } catch { /* Ignore a released/closed writer. */ }
       }
     });
+  }
+
+  async writeRaw(value) {
+    let writer;
+    try {
+      writer = this.port.writable.getWriter();
+      const payload = new TextEncoder().encode(value);
+      await writer.write(payload);
+      this.status(`Sent ${payload.byteLength} bytes to the CLI.`);
+    } finally {
+      try { writer?.releaseLock(); } catch { /* Ignore a released/closed writer. */ }
+    }
   }
 
   finishPending(error = null) {
@@ -177,7 +212,7 @@ export function portRole(info = {}) {
 
 function noBytesMessage(info) {
   if (portRole(info) === "application") {
-    return "239A:8029 is the correct application port, but the firmware USB CLI did not respond. Flash v0.3.1 and try again.";
+    return "239A:8029 is the correct application port, but the firmware USB CLI returned no bytes. Close minicom or other programs using the port, reconnect the USB cable, and try again.";
   }
   if (portRole(info) === "bootloader") {
     return "This is the bootloader port. Start the sensor node normally and select application port 239A:8029.";
