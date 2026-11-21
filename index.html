@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="no">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#08141c">
-    <meta name="description" content="Flash og konfigurer MeshCore-sensornoder lokalt i nettleseren.">
+    <meta name="description" content="Flash and configure MeshCore sensor nodes locally in your browser.">
     <title>MeshCore Sensor Portal</title>
     <link rel="stylesheet" href="assets/styles.css">
   </head>
@@ -12,203 +12,203 @@
     <header class="site-header">
       <a class="brand" href="#top" aria-label="MeshCore Sensor Portal">
         <span class="brand-mark" aria-hidden="true">MC</span>
-        <span><strong>Sensor Portal</strong><small>MeshCore nodeverktøy</small></span>
+        <span><strong>Sensor Portal</strong><small>MeshCore node tools</small></span>
       </a>
       <div class="connection-summary">
         <span id="connectionDot" class="status-dot" aria-hidden="true"></span>
-        <span id="connectionText">Ingen enhet tilkoblet</span>
+        <span id="connectionText">No device connected</span>
       </div>
     </header>
 
     <main id="top">
       <section class="hero">
         <div>
-          <p class="eyebrow">Alt skjer lokalt i nettleseren</p>
-          <h1>Firmware og oppsett,<br><span>uten ekstra programvare.</span></h1>
-          <p class="hero-copy">Velg sensornode, hent riktig firmware og konfigurer den over USB. Nøkler og passord sendes ikke til en server.</p>
+          <p class="eyebrow">Everything runs locally in your browser</p>
+          <h1>Firmware and setup,<br><span>without extra software.</span></h1>
+          <p class="hero-copy">Select a sensor node, get the correct firmware, and configure it over USB. Keys and passwords are never sent to a server.</p>
         </div>
-        <div class="hero-status" aria-label="Portalstatus">
-          <div><strong id="firmwareCount">–</strong><span>firmwarepakker</span></div>
-          <div><strong>USB</strong><span>direkte CLI</span></div>
-          <div><strong class="muted">Neste</strong><span>remote Companion</span></div>
+        <div class="hero-status" aria-label="Portal status">
+          <div><strong id="firmwareCount">–</strong><span>firmware packages</span></div>
+          <div><strong>USB</strong><span>direct CLI</span></div>
+          <div><strong class="muted">Next</strong><span>remote Companion</span></div>
         </div>
       </section>
 
-      <nav class="step-nav" aria-label="Arbeidsflyt">
+      <nav class="step-nav" aria-label="Workflow">
         <a href="#firmware"><span>1</span> Firmware</a>
-        <a href="#connect"><span>2</span> Koble til</a>
-        <a href="#configure"><span>3</span> Konfigurer</a>
-        <a href="#console"><span>4</span> Konsoll</a>
+        <a href="#connect"><span>2</span> Connect</a>
+        <a href="#configure"><span>3</span> Configure</a>
+        <a href="#console"><span>4</span> Console</a>
       </nav>
 
       <section id="firmware" class="panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Firmware</p><h2>Velg nodeprofil</h2></div>
-          <span id="catalogStatus" class="pill">Laster katalog</span>
+          <div><p class="eyebrow">Firmware</p><h2>Select a node profile</h2></div>
+          <span id="catalogStatus" class="pill">Loading catalog</span>
         </div>
         <div class="firmware-grid">
           <div class="field-group">
-            <label for="profileSelect">Profil</label>
+            <label for="profileSelect">Profile</label>
             <select id="profileSelect"></select>
           </div>
           <div class="field-group">
-            <label for="boardSelect">Maskinvare</label>
+            <label for="boardSelect">Hardware</label>
             <select id="boardSelect"></select>
           </div>
           <div class="field-group">
-            <label for="versionSelect">Versjon</label>
+            <label for="versionSelect">Version</label>
             <select id="versionSelect"></select>
           </div>
         </div>
         <article id="firmwareDetails" class="firmware-details"></article>
         <div class="actions download-actions">
-          <a id="downloadUf2" class="button primary" href="#" download>Last ned UF2</a>
-          <a id="downloadDfu" class="button secondary" href="#" download>Last ned DFU ZIP</a>
+          <a id="downloadUf2" class="button primary" href="#" download>Download UF2</a>
+          <a id="downloadDfu" class="button secondary" href="#" download>Download DFU ZIP</a>
         </div>
         <div class="flash-box">
           <div class="flash-box-heading">
-            <div><p class="eyebrow">nRF52 Serial DFU</p><h3>Flash direkte via USB</h3></div>
-            <span id="flashSupport" class="pill">Sjekker nettleser</span>
+            <div><p class="eyebrow">nRF52 Serial DFU</p><h3>Flash directly over USB</h3></div>
+            <span id="flashSupport" class="pill">Checking browser</span>
           </div>
           <ol class="flash-steps">
-            <li>Aktiver DFU fra applikasjonsporten <code>239A:8029</code>, eller dobbelttrykk RESET.</li>
-            <li>Ved flashing velger du den nye bootloaderporten, normalt <code>239A:0029</code> eller <code>239A:002A</code>.</li>
-            <li>Vent til 100 % før USB-kabelen kobles fra.</li>
+            <li>Enter DFU mode from application port <code>239A:8029</code>, or double-press RESET.</li>
+            <li>When flashing, select the new bootloader port, usually <code>239A:0029</code> or <code>239A:002A</code>.</li>
+            <li>Wait for 100% before disconnecting the USB cable.</li>
           </ol>
           <div class="actions">
-            <button id="enterDfuButton" class="button secondary" type="button">Aktiver DFU-mode</button>
-            <button id="flashButton" class="button primary" type="button">Flash valgt firmware</button>
+            <button id="enterDfuButton" class="button secondary" type="button">Enter DFU mode</button>
+            <button id="flashButton" class="button primary" type="button">Flash selected firmware</button>
             <button id="eraseButton" class="button danger" type="button">Erase flash</button>
           </div>
           <div class="local-firmware">
-            <label for="localDfuFile">Valgfritt: bruk en lokal Nordic DFU ZIP i stedet for Release-filen</label>
+            <label for="localDfuFile">Optional: use a local Nordic DFU ZIP instead of the release asset</label>
             <input id="localDfuFile" type="file" accept=".zip,application/zip">
           </div>
           <div id="flashProgressWrap" class="flash-progress" hidden>
-            <div><span id="flashStatus">Klar</span><strong id="flashPercent">0 %</strong></div>
+            <div><span id="flashStatus">Ready</span><strong id="flashPercent">0 %</strong></div>
             <progress id="flashProgress" max="100" value="0">0 %</progress>
           </div>
           <details class="diagnostics" open>
-            <summary>DFU-diagnostikk</summary>
-            <pre id="flashLog">Ingen DFU-operasjon startet.</pre>
+            <summary>DFU diagnostics</summary>
+            <pre id="flashLog">No DFU operation started.</pre>
           </details>
-          <p class="note"><strong>UF2 reserve:</strong> Dobbelttrykk RESET og kopier UF2-filen til disken som vises. Direkte DFU krever Chrome eller Edge.</p>
+          <p class="note"><strong>UF2 fallback:</strong> Double-press RESET and copy the UF2 file to the drive that appears. Direct DFU requires Chrome or Edge.</p>
         </div>
       </section>
 
       <section id="connect" class="panel split-panel">
         <div>
-          <p class="eyebrow">Tilkobling</p>
-          <h2>Koble til sensornoden</h2>
-          <p>Direkte USB bruker Web Serial på 115200 baud. Chrome eller Edge kreves, og ingen annen terminal kan holde porten åpen.</p>
-          <div class="mode-list" role="radiogroup" aria-label="Tilkoblingsmåte">
-            <label class="mode-option active"><input type="radio" name="mode" value="serial" checked><span><strong>Direkte USB</strong><small>Tilgjengelig nå</small></span></label>
-            <label class="mode-option disabled"><input type="radio" name="mode" value="remote" disabled><span><strong>Via Companion</strong><small>Planlagt neste trinn</small></span></label>
+          <p class="eyebrow">Connection</p>
+          <h2>Connect to the sensor node</h2>
+          <p>Direct USB uses Web Serial at 115200 baud. Chrome or Edge is required, and no other terminal may keep the port open.</p>
+          <div class="mode-list" role="radiogroup" aria-label="Connection method">
+            <label class="mode-option active"><input type="radio" name="mode" value="serial" checked><span><strong>Direct USB</strong><small>Available now</small></span></label>
+            <label class="mode-option disabled"><input type="radio" name="mode" value="remote" disabled><span><strong>Via Companion</strong><small>Planned next</small></span></label>
           </div>
         </div>
         <div class="connect-card">
-          <span id="serialSupport" class="pill">Sjekker nettleser</span>
-          <h3 id="deviceName">Ingen port valgt</h3>
-          <p id="deviceDetail">Koble sensornoden til med en USB-datakabel.</p>
+          <span id="serialSupport" class="pill">Checking browser</span>
+          <h3 id="deviceName">No port selected</h3>
+          <p id="deviceDetail">Connect the sensor node with a USB data cable.</p>
           <div class="actions vertical-mobile">
-            <button id="connectButton" class="button primary" type="button">Velg USB-port</button>
-            <button id="disconnectButton" class="button secondary" type="button" disabled>Koble fra</button>
+            <button id="connectButton" class="button primary" type="button">Select USB port</button>
+            <button id="disconnectButton" class="button secondary" type="button" disabled>Disconnect</button>
           </div>
         </div>
       </section>
 
       <section id="configure" class="panel">
         <div class="section-heading">
-          <div><p class="eyebrow">Konfigurator</p><h2>Sensorer og meldinger</h2></div>
-          <span class="pill requires-connection">Krever USB</span>
+          <div><p class="eyebrow">Configurator</p><h2>Sensors and messages</h2></div>
+          <span class="pill requires-connection">USB required</span>
         </div>
 
-        <div class="tabs" role="tablist" aria-label="Konfigurasjonsområder">
+        <div class="tabs" role="tablist" aria-label="Configuration sections">
           <button class="tab active" role="tab" aria-selected="true" data-tab="basic">Node</button>
           <button class="tab" role="tab" aria-selected="false" data-tab="ruuvi">Ruuvi</button>
           <button class="tab" role="tab" aria-selected="false" data-tab="shelly">Shelly</button>
           <button class="tab" role="tab" aria-selected="false" data-tab="victron">Victron</button>
-          <button class="tab" role="tab" aria-selected="false" data-tab="channel">Statuskanal</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="channel">Status channel</button>
         </div>
 
         <div id="tab-basic" class="tab-panel active" role="tabpanel">
           <form class="config-form" data-command-form>
-            <div class="field-group"><label for="nodeName">Nodenavn</label><input id="nodeName" name="name" maxlength="31" required placeholder="Hytte-Sensor"></div>
-            <button class="button primary" type="submit" data-command-template="set name {name}">Lagre navn</button>
+            <div class="field-group"><label for="nodeName">Node name</label><input id="nodeName" name="name" maxlength="31" required placeholder="Cabin-Sensor"></div>
+            <button class="button primary" type="submit" data-command-template="set name {name}">Save name</button>
           </form>
           <form class="config-form" data-command-form data-sensitive>
-            <div class="field-group"><label for="adminPassword">Nytt adminpassord</label><input id="adminPassword" name="password" type="password" autocomplete="new-password" required placeholder="Et langt, unikt passord"></div>
-            <button class="button secondary" type="submit" data-command-template="password {password}">Endre passord</button>
+            <div class="field-group"><label for="adminPassword">New admin password</label><input id="adminPassword" name="password" type="password" autocomplete="new-password" required placeholder="A long, unique password"></div>
+            <button class="button secondary" type="submit" data-command-template="password {password}">Change password</button>
           </form>
         </div>
 
         <div id="tab-ruuvi" class="tab-panel" role="tabpanel" hidden>
-          <div class="sensor-toolbar"><button class="button primary" data-command="ruuvi scan">Søk etter RuuviTags</button><button class="button secondary" data-command="ruuvi list">Vis konfigurerte</button></div>
+          <div class="sensor-toolbar"><button class="button primary" data-command="ruuvi scan">Scan for RuuviTags</button><button class="button secondary" data-command="ruuvi list">Show configured</button></div>
           <form class="config-form three" data-command-form>
-            <div class="field-group"><label>MAC-adresse</label><input name="mac" data-mac required placeholder="CB:B8:33:4C:88:4F"></div>
-            <div class="field-group"><label>Navn</label><input name="name" maxlength="15" pattern="[^ ]+" required placeholder="Kjeller"></div>
-            <button class="button primary" type="submit" data-command-template="ruuvi add {mac} {name}">Legg til</button>
+            <div class="field-group"><label>MAC address</label><input name="mac" data-mac required placeholder="CB:B8:33:4C:88:4F"></div>
+            <div class="field-group"><label>Name</label><input name="name" maxlength="15" pattern="[^ ]+" required placeholder="Basement"></div>
+            <button class="button primary" type="submit" data-command-template="ruuvi add {mac} {name}">Add</button>
           </form>
-          <form class="config-form compact" data-command-form><div class="field-group"><label>MAC som skal fjernes</label><input name="mac" data-mac required placeholder="CB:B8:33:4C:88:4F"></div><button class="button danger" type="submit" data-command-template="ruuvi remove {mac}">Fjern</button></form>
+          <form class="config-form compact" data-command-form><div class="field-group"><label>MAC address to remove</label><input name="mac" data-mac required placeholder="CB:B8:33:4C:88:4F"></div><button class="button danger" type="submit" data-command-template="ruuvi remove {mac}">Remove</button></form>
         </div>
 
         <div id="tab-shelly" class="tab-panel" role="tabpanel" hidden>
-          <div class="sensor-toolbar"><button class="button primary" data-command="shelly scan">Søk etter Shelly</button><button class="button secondary" data-command="shelly list">Vis konfigurerte</button></div>
-          <p class="note">Shelly BLU H&amp;T sender normalt omtrent én gang per minutt. La søket stå litt før du prøver igjen.</p>
+          <div class="sensor-toolbar"><button class="button primary" data-command="shelly scan">Scan for Shelly</button><button class="button secondary" data-command="shelly list">Show configured</button></div>
+          <p class="note">Shelly BLU H&amp;T normally advertises about once per minute. Let the scan run for a while before trying again.</p>
           <form class="config-form three" data-command-form>
-            <div class="field-group"><label>BLE-adresse</label><input name="mac" data-mac required placeholder="AA:BB:CC:DD:EE:FF"></div>
-            <div class="field-group"><label>Navn</label><input name="name" maxlength="15" pattern="[^ ]+" required placeholder="Bad"></div>
-            <button class="button primary" type="submit" data-command-template="shelly add {mac} {name}">Legg til</button>
+            <div class="field-group"><label>BLE address</label><input name="mac" data-mac required placeholder="AA:BB:CC:DD:EE:FF"></div>
+            <div class="field-group"><label>Name</label><input name="name" maxlength="15" pattern="[^ ]+" required placeholder="Bathroom"></div>
+            <button class="button primary" type="submit" data-command-template="shelly add {mac} {name}">Add</button>
           </form>
-          <form class="config-form compact" data-command-form><div class="field-group"><label>Adresse som skal fjernes</label><input name="mac" data-mac required placeholder="AA:BB:CC:DD:EE:FF"></div><button class="button danger" type="submit" data-command-template="shelly remove {mac}">Fjern</button></form>
+          <form class="config-form compact" data-command-form><div class="field-group"><label>Address to remove</label><input name="mac" data-mac required placeholder="AA:BB:CC:DD:EE:FF"></div><button class="button danger" type="submit" data-command-template="shelly remove {mac}">Remove</button></form>
         </div>
 
         <div id="tab-victron" class="tab-panel" role="tabpanel" hidden>
-          <div class="sensor-toolbar"><button class="button secondary" data-command="victron list">Vis konfigurerte Victron-enheter</button></div>
+          <div class="sensor-toolbar"><button class="button secondary" data-command="victron list">Show configured Victron devices</button></div>
           <form class="config-form victron" data-command-form data-sensitive>
-            <div class="field-group"><label>MAC-adresse</label><input name="mac" data-mac required placeholder="AA:BB:CC:DD:EE:FF"></div>
-            <div class="field-group"><label>Instant Readout-nøkkel</label><input name="key" type="password" autocomplete="off" minlength="32" maxlength="32" pattern="[0-9A-Fa-f]{32}" required placeholder="32 heksadesimale tegn"></div>
-            <div class="field-group"><label>Navn</label><input name="name" maxlength="15" pattern="[^ ]+" required placeholder="SmartShunt"></div>
-            <button class="button primary" type="submit" data-command-template="victron add {mac} {key} {name}">Legg til</button>
+            <div class="field-group"><label>MAC address</label><input name="mac" data-mac required placeholder="AA:BB:CC:DD:EE:FF"></div>
+            <div class="field-group"><label>Instant Readout key</label><input name="key" type="password" autocomplete="off" minlength="32" maxlength="32" pattern="[0-9A-Fa-f]{32}" required placeholder="32 hexadecimal characters"></div>
+            <div class="field-group"><label>Name</label><input name="name" maxlength="15" pattern="[^ ]+" required placeholder="SmartShunt"></div>
+            <button class="button primary" type="submit" data-command-template="victron add {mac} {key} {name}">Add</button>
           </form>
-          <form class="config-form compact" data-command-form><div class="field-group"><label>MAC som skal fjernes</label><input name="mac" data-mac required placeholder="AA:BB:CC:DD:EE:FF"></div><button class="button danger" type="submit" data-command-template="victron remove {mac}">Fjern</button></form>
+          <form class="config-form compact" data-command-form><div class="field-group"><label>MAC address to remove</label><input name="mac" data-mac required placeholder="AA:BB:CC:DD:EE:FF"></div><button class="button danger" type="submit" data-command-template="victron remove {mac}">Remove</button></form>
         </div>
 
         <div id="tab-channel" class="tab-panel" role="tabpanel" hidden>
-          <div class="sensor-toolbar"><button class="button secondary" data-command="channel info">Les kanalstatus</button><button class="button secondary" data-command="status now">Send status nå</button></div>
+          <div class="sensor-toolbar"><button class="button secondary" data-command="channel info">Read channel status</button><button class="button secondary" data-command="status now">Send status now</button></div>
           <form class="config-form channel" data-command-form data-sensitive>
-            <div class="field-group"><label>Kanalnavn</label><input name="channel" maxlength="15" pattern="[^ ]+" required placeholder="Sensorer"></div>
-            <div class="field-group"><label>16-byte kanalnøkkel</label><input name="key" type="password" autocomplete="off" minlength="32" maxlength="32" pattern="[0-9A-Fa-f]{32}" required placeholder="32 heksadesimale tegn"></div>
-            <button class="button primary" type="submit" data-command-template="channel set {channel} {key}">Lagre kanal</button>
+            <div class="field-group"><label>Channel name</label><input name="channel" maxlength="15" pattern="[^ ]+" required placeholder="Sensors"></div>
+            <div class="field-group"><label>16-byte channel key</label><input name="key" type="password" autocomplete="off" minlength="32" maxlength="32" pattern="[0-9A-Fa-f]{32}" required placeholder="32 hexadecimal characters"></div>
+            <button class="button primary" type="submit" data-command-template="channel set {channel} {key}">Save channel</button>
           </form>
           <div class="inline-settings">
-            <button class="button secondary" data-command="channel status on">Status på</button><button class="button ghost" data-command="channel status off">Status av</button>
-            <button class="button secondary" data-command="channel alarms on">Alarmer på</button><button class="button ghost" data-command="channel alarms off">Alarmer av</button>
+            <button class="button secondary" data-command="channel status on">Status on</button><button class="button ghost" data-command="channel status off">Status off</button>
+            <button class="button secondary" data-command="channel alarms on">Alarms on</button><button class="button ghost" data-command="channel alarms off">Alarms off</button>
           </div>
-          <form class="config-form compact" data-command-form><div class="field-group"><label>Statusintervall (minutter)</label><input name="minutes" type="number" min="15" max="10080" value="120" required></div><button class="button secondary" type="submit" data-command-template="channel interval {minutes}">Lagre intervall</button></form>
+          <form class="config-form compact" data-command-form><div class="field-group"><label>Status interval (minutes)</label><input name="minutes" type="number" min="15" max="10080" value="120" required></div><button class="button secondary" type="submit" data-command-template="channel interval {minutes}">Save interval</button></form>
         </div>
 
-        <div id="commandResult" class="result-box" aria-live="polite">Koble til en node for å starte.</div>
+        <div id="commandResult" class="result-box" aria-live="polite">Connect to a node to get started.</div>
       </section>
 
       <section id="console" class="panel console-panel">
-        <div class="section-heading"><div><p class="eyebrow">Avansert</p><h2>CLI-konsoll</h2></div><button id="clearConsole" class="text-button" type="button">Tøm</button></div>
-        <pre id="consoleOutput" tabindex="0" aria-label="Utdata fra enheten">Sensor Portal klar.</pre>
-        <form id="consoleForm" class="console-input"><label class="sr-only" for="consoleCommand">CLI-kommando</label><span aria-hidden="true">›</span><input id="consoleCommand" autocomplete="off" placeholder="Skriv en kommando, for eksempel help"><button class="button primary" type="submit">Send</button></form>
+        <div class="section-heading"><div><p class="eyebrow">Advanced</p><h2>CLI console</h2></div><button id="clearConsole" class="text-button" type="button">Clear</button></div>
+        <pre id="consoleOutput" tabindex="0" aria-label="Device output">Sensor Portal ready.</pre>
+        <form id="consoleForm" class="console-input"><label class="sr-only" for="consoleCommand">CLI command</label><span aria-hidden="true">›</span><input id="consoleCommand" autocomplete="off" placeholder="Enter a command, for example help"><button class="button primary" type="submit">Send</button></form>
       </section>
     </main>
 
-    <footer><span>MeshCore Sensor Portal</span><span>Ingen nøkler lagres av portalen</span></footer>
+    <footer><span>MeshCore Sensor Portal</span><span>The portal does not store any keys</span></footer>
     <dialog id="eraseDialog" class="erase-dialog">
       <form method="dialog">
-        <p class="eyebrow">Destruktiv handling</p>
-        <h2>Slett hele nodeoppsettet?</h2>
-        <p>Formatter-firmwaren sletter MeshCore-identitet, nøkler, kontakter og all sensorkonfigurasjon på noden. Dette kan ikke angres.</p>
-        <label for="eraseConfirmation">Skriv <strong>SLETT</strong> for å bekrefte</label>
+        <p class="eyebrow">Destructive action</p>
+        <h2>Erase the entire node configuration?</h2>
+        <p>The formatter firmware erases the MeshCore identity, keys, contacts, and all sensor configuration on the node. This cannot be undone.</p>
+        <label for="eraseConfirmation">Enter <strong>ERASE</strong> to confirm</label>
         <input id="eraseConfirmation" autocomplete="off" spellcheck="false">
         <div class="actions">
           <button id="confirmEraseButton" class="button danger" value="confirm" disabled>Erase flash</button>
-          <button class="button secondary" value="cancel">Avbryt</button>
+          <button class="button secondary" value="cancel">Cancel</button>
         </div>
       </form>
     </dialog>

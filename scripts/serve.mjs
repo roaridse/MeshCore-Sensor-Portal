@@ -24,7 +24,7 @@ const server = createServer(async (request, response) => {
     response.end(body);
   } catch {
     response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-    response.end("Ikke funnet");
+    response.end("Not found");
   }
 });
 

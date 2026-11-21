@@ -31,14 +31,14 @@ export class SerialCli {
   }
 
   async connect() {
-    if (!this.serial?.requestPort) throw new Error("Web Serial støttes ikke av denne nettleseren.");
+    if (!this.serial?.requestPort) throw new Error("Web Serial is not supported by this browser.");
     if (this.connected) return this.port.getInfo();
 
-    this.status("Velg sensornodens USB-port.");
+    this.status("Select the sensor node's USB port.");
     this.port = await this.serial.requestPort({});
     const info = this.port.getInfo();
     this.portInfo = info;
-    this.status(`Åpner ${formatPortInfo(info)} på ${this.baudRate} baud.`);
+    this.status(`Opening ${formatPortInfo(info)} at ${this.baudRate} baud.`);
     await this.port.open({ baudRate: this.baudRate, bufferSize: 4096 });
 
     // Match normal serial terminal behaviour. Some USB CDC implementations do
@@ -46,9 +46,9 @@ export class SerialCli {
     if (this.port.setSignals) {
       try {
         await this.port.setSignals({ dataTerminalReady: true, requestToSend: false });
-        this.status("DTR aktivert; USB-porten er åpen.");
+        this.status("DTR asserted; the USB port is open.");
       } catch (error) {
-        this.status(`Porten støtter ikke DTR-signaler (${error.message}).`);
+        this.status(`The port does not support DTR signals (${error.message}).`);
       }
     }
 
@@ -71,8 +71,8 @@ export class SerialCli {
       try { await this.port.close(); } catch { /* Device may have disconnected. */ }
       this.port = null;
     }
-    this.finishPending(new Error("Porten ble koblet fra."));
-    this.status("USB-porten er lukket.");
+    this.finishPending(new Error("The port was disconnected."));
+    this.status("The USB port is closed.");
   }
 
   async readLoop() {
@@ -95,13 +95,13 @@ export class SerialCli {
       }
     } catch (error) {
       if (this.reading) {
-        this.onData(`\n[USB-lesefeil: ${error.message}]\n`);
-        this.status(`USB-lesing stoppet: ${error.message}`);
+        this.onData(`\n[USB read error: ${error.message}]\n`);
+        this.status(`USB reading stopped: ${error.message}`);
       }
     } finally {
       if (this.reading) {
         this.reading = false;
-        this.finishPending(new Error("USB-enheten forsvant."));
+        this.finishPending(new Error("The USB device disappeared."));
         this.onDisconnect();
       }
     }
@@ -116,8 +116,8 @@ export class SerialCli {
   }
 
   async send(command, { idleMs = 650, timeoutMs = 7000 } = {}) {
-    if (!this.connected) throw new Error("Ingen USB-enhet er tilkoblet.");
-    if (this.pending) throw new Error("Vent på svar fra forrige kommando.");
+    if (!this.connected) throw new Error("No USB device is connected.");
+    if (this.pending) throw new Error("Wait for the previous command to finish.");
 
     const normalized = command.trim();
     if (!normalized) return "";
@@ -128,7 +128,7 @@ export class SerialCli {
         const received = this.receivedBytes - receivedBefore;
         const detail = received === 0
           ? noBytesMessage(this.portInfo)
-          : `Porten mottok ${received} bytes, men svaret ble ikke avsluttet.`;
+          : `The port received ${received} bytes, but the response did not finish.`;
         this.finishPending(new Error(detail));
       }, timeoutMs);
       this.pending = { resolve, reject, output: "", command: normalized, idleMs, idleTimer: null, timeoutTimer };
@@ -138,7 +138,7 @@ export class SerialCli {
         writer = this.port.writable.getWriter();
         const payload = new TextEncoder().encode(`${normalized}\r\n`);
         await writer.write(payload);
-        this.status(`Sendte ${payload.byteLength} bytes til CLI.`);
+        this.status(`Sent ${payload.byteLength} bytes to the CLI.`);
       } catch (error) {
         this.finishPending(error);
       } finally {
@@ -177,12 +177,12 @@ export function portRole(info = {}) {
 
 function noBytesMessage(info) {
   if (portRole(info) === "application") {
-    return "239A:8029 er riktig applikasjonsport, men firmwarens USB-CLI svarte ikke. Flash v0.3.1 og prøv på nytt.";
+    return "239A:8029 is the correct application port, but the firmware USB CLI did not respond. Flash v0.3.1 and try again.";
   }
   if (portRole(info) === "bootloader") {
-    return "Dette er bootloaderporten. Start sensornoden normalt og velg applikasjonsport 239A:8029.";
+    return "This is the bootloader port. Start the sensor node normally and select application port 239A:8029.";
   }
-  return "Kommandoen ble sendt, men porten mottok ingen bytes. Kontroller at du valgte sensornodens applikasjonsport.";
+  return "The command was sent, but the port received no bytes. Make sure you selected the sensor node's application port.";
 }
 
 function cleanReply(value, command) {

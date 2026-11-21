@@ -1,20 +1,21 @@
-# Arkitektur
+# Architecture
 
-## Ansvar
+## Responsibilities
 
-Portalen er en statisk klient og skal ikke bygge firmware eller motta hemmelige
-konfigurasjonsverdier. Firmwareprosjektene eier bygg, tester og Releases.
+The portal is a static client and must not build firmware or receive secret
+configuration values. The firmware projects own their builds, tests, and
+Releases.
 
 ```text
-Firmware-repo -> GitHub Release + firmwaremanifest
-                                      |
-                                      v
-Sensor Portal -> USB sensor-CLI eller Companion -> MeshCore -> sensornode
+Firmware repository -> GitHub Release + firmware manifest
+                                           |
+                                           v
+Sensor Portal -> USB sensor CLI or Companion -> MeshCore -> sensor node
 ```
 
-## Transportadaptere
+## Transport adapters
 
-Brukergrensesnittet skal sende kommandoer gjennom et lite felles grensesnitt:
+The user interface sends commands through a small shared interface:
 
 ```js
 await transport.connect();
@@ -22,43 +23,47 @@ const reply = await transport.send("ruuvi scan");
 await transport.disconnect();
 ```
 
-`SerialCli` er første adapter og snakker direkte med sensornodens tekst-CLI ved
-115200 baud. En senere `CompanionRemoteCli` skal bruke `meshcore.js`, velge en
-kontakt, autentisere administratoren og sende samme kommando over MeshCore.
+`SerialCli` is the first adapter and communicates directly with the sensor
+node's text CLI at 115200 baud. A future `CompanionRemoteCli` will use
+`meshcore.js`, select a contact, authenticate the administrator, and send the
+same command over MeshCore.
 
-UI-koden skal ikke vite om kommandoen gikk direkte eller via mesh. Remote-
-adapteren må ha lengre tidsavbrudd og håndtere korte eller oppdelte svar.
+The UI code must not need to know whether a command was sent directly or over
+the mesh. The remote adapter must use longer timeouts and handle short or
+fragmented responses.
 
-## Firmwarekatalog
+## Firmware catalog
 
-`catalog/firmware.json` bruker `schemaVersion: 1`. Nye pakker legges til uten å
-endre UI så lenge de følger samme skjema. En pakke identifiseres av:
+`catalog/firmware.json` uses `schemaVersion: 1`. New packages can be added
+without changing the UI as long as they follow the same schema. A package is
+identified by:
 
-- profil;
-- kort;
-- firmwareversjon;
-- PlatformIO-miljø;
-- flashmetode;
-- nedlastbare filer og SHA-256-summer;
-- valideringsstatus og funksjonsliste.
+- profile;
+- board;
+- firmware version;
+- PlatformIO environment;
+- flashing method;
+- downloadable files and SHA-256 sums;
+- validation status and feature list.
 
-På sikt bør firmware-workflowen generere et manifest per Release. Portalens
-katalog kan da samle flere manifests uten å hardkode filnavn i JavaScript.
+In the future, the firmware workflow should generate one manifest per Release.
+The portal catalog can then combine multiple manifests without hard-coding file
+names in JavaScript.
 
-## Sikkerhet
+## Security
 
-- Ingen backend er nødvendig for USB- eller BLE-kommunikasjon.
-- Passord, Victron-nøkler og kanalnøkler skal ikke lagres i Local Storage,
-  IndexedDB, URL-er eller telemetri.
-- Sensitive kommandoer maskeres i portalkonsollen, også ved serie-ekko.
-- Releasefiler skal få SHA-256-summer før portalen tilbyr direkte flashing.
-- Remote-konfigurasjon skal bare bruke MeshCores autentiserte administratorflyt.
-- Portalen må ikke legge til en generell HTTP-proxy for private GitHub-filer.
+- No backend is required for USB or BLE communication.
+- Passwords, Victron keys, and channel keys must not be stored in Local Storage,
+  IndexedDB, URLs, or telemetry.
+- Sensitive commands are redacted in the portal console, including serial echoes.
+- Release files must have SHA-256 sums before the portal offers direct flashing.
+- Remote configuration must use MeshCore's authenticated administrator flow.
+- The portal must not add a general HTTP proxy for private GitHub files.
 
-## Planlagte milepæler
+## Planned milestones
 
-1. Genererte checksums og Release-manifest fra firmware-repoet.
-2. Stabil og versjonert maskinlesbar sensor-CLI.
-3. Companion over Web Serial og Web Bluetooth med `meshcore.js`.
-4. Remote CLI, kontaktsøk og administratorautentisering.
-5. Flere kort og profiler for kablede sensorer.
+1. Generated checksums and Release manifests from the firmware repository.
+2. A stable, versioned, and machine-readable sensor CLI.
+3. Companion access over Web Serial and Web Bluetooth using `meshcore.js`.
+4. Remote CLI, contact discovery, and administrator authentication.
+5. More boards and profiles for wired sensors.

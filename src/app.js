@@ -18,7 +18,7 @@ let flashBusy = false;
 
 const serial = new SerialCli({
   onData: (text) => { if (!suppressConsoleData) appendConsole(text); },
-  onDisconnect: () => setConnected(false, "USB-enheten ble koblet fra"),
+  onDisconnect: () => setConnected(false, "The USB device was disconnected"),
   onStatus: ({ timestamp, message }) => appendConsole(`\n[USB ${formatTime(timestamp)}] ${message}\n`)
 });
 const flasher = new Nrf52Flasher({ onLog: appendFlashLog });
@@ -41,19 +41,19 @@ async function loadCatalog() {
     catalog = await response.json();
     validateCatalog(catalog);
     elements.firmwareCount.textContent = String(catalog.packages.length);
-    elements.catalogStatus.textContent = `Oppdatert ${catalog.updated}`;
+    elements.catalogStatus.textContent = `Updated ${catalog.updated}`;
     elements.catalogStatus.classList.add("good");
     populateProfiles();
   } catch (error) {
-    elements.catalogStatus.textContent = "Katalogfeil";
+    elements.catalogStatus.textContent = "Catalog error";
     elements.catalogStatus.classList.add("warn");
-    elements.firmwareDetails.innerHTML = `<strong>Firmwarekatalogen kunne ikke lastes.</strong><p>${escapeHtml(error.message)}. Åpne portalen via en lokal webserver, ikke direkte som fil.</p>`;
+    elements.firmwareDetails.innerHTML = `<strong>The firmware catalog could not be loaded.</strong><p>${escapeHtml(error.message)}. Open the portal through a local web server, not directly as a file.</p>`;
   }
 }
 
 function validateCatalog(value) {
   if (value?.schemaVersion !== 1 || !Array.isArray(value.packages) || value.packages.length === 0) {
-    throw new Error("Ukjent eller tomt katalogformat");
+    throw new Error("Unknown or empty catalog format");
   }
 }
 
@@ -92,8 +92,8 @@ function renderFirmware() {
   const item = selectedPackage();
   if (!item) return;
   const features = item.features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join("");
-  const validation = item.validation === "hardware-partial" ? "Delvis maskinvaretestet" : item.validation;
-  elements.firmwareDetails.innerHTML = `<div><strong>${escapeHtml(item.profile.name)} · ${escapeHtml(item.board.name)}</strong><p>${escapeHtml(item.description)}</p><p>Bygg: ${escapeHtml(item.environment)} · ${escapeHtml(validation)}</p></div><ul>${features}</ul>`;
+  const validation = item.validation === "hardware-partial" ? "Partially hardware tested" : item.validation;
+  elements.firmwareDetails.innerHTML = `<div><strong>${escapeHtml(item.profile.name)} · ${escapeHtml(item.board.name)}</strong><p>${escapeHtml(item.description)}</p><p>Build: ${escapeHtml(item.environment)} · ${escapeHtml(validation)}</p></div><ul>${features}</ul>`;
   setDownload(elements.downloadUf2, item.assets.uf2);
   setDownload(elements.downloadDfu, item.assets.dfu);
   updateFlashControls();
@@ -111,13 +111,13 @@ function fillSelect(select, options) {
 
 function setupConnection() {
   if (SerialCli.supported()) {
-    elements.serialSupport.textContent = "Web Serial tilgjengelig";
+    elements.serialSupport.textContent = "Web Serial available";
     elements.serialSupport.classList.add("good");
   } else {
-    elements.serialSupport.textContent = "Web Serial mangler";
+    elements.serialSupport.textContent = "Web Serial unavailable";
     elements.serialSupport.classList.add("warn");
     elements.connectButton.disabled = true;
-    elements.deviceDetail.textContent = "Bruk Chrome eller Edge på en datamaskin.";
+    elements.deviceDetail.textContent = "Use Chrome or Edge on a desktop computer.";
   }
 
   elements.connectButton.addEventListener("click", async () => {
@@ -127,24 +127,24 @@ function setupConnection() {
       const id = [info.usbVendorId, info.usbProductId].every(Number.isInteger)
         ? `${hex4(info.usbVendorId)}:${hex4(info.usbProductId)}` : "USB serial";
       setConnected(true, id);
-      appendConsole("\n[USB tilkoblet]\n");
-      elements.connectionText.textContent = "Port åpen – tester CLI";
-      elements.deviceDetail.textContent = `${id} · sender ver`;
-      appendConsole("\n› ver (automatisk tilkoblingstest)\n");
+      appendConsole("\n[USB connected]\n");
+      elements.connectionText.textContent = "Port open – testing CLI";
+      elements.deviceDetail.textContent = `${id} · sending ver`;
+      appendConsole("\n› ver (automatic connection test)\n");
       try {
         const reply = await serial.send("ver", { idleMs: 650, timeoutMs: 4000 });
-        elements.connectionText.textContent = "USB og CLI klar";
-        elements.deviceDetail.textContent = `${id} · CLI svarte${reply ? `: ${firstLine(reply)}` : ""}`;
+        elements.connectionText.textContent = "USB and CLI ready";
+        elements.deviceDetail.textContent = `${id} · CLI responded${reply ? `: ${firstLine(reply)}` : ""}`;
         elements.connectionDot.classList.remove("warning");
         elements.connectionDot.classList.add("connected");
-        showToast("Sensornodens CLI svarer");
+        showToast("The sensor node CLI is responding");
       } catch (probeError) {
-        elements.connectionText.textContent = "Port åpen – ingen CLI-respons";
+        elements.connectionText.textContent = "Port open – no CLI response";
         elements.deviceDetail.textContent = `${id} · ${probeError.message}`;
         elements.connectionDot.classList.remove("connected");
         elements.connectionDot.classList.add("warning");
-        appendConsole(`\n[CLI-test feilet] ${probeError.message}\n`);
-        showToast("Porten åpnet, men CLI svarte ikke", true);
+        appendConsole(`\n[CLI test failed] ${probeError.message}\n`);
+        showToast("The port opened, but the CLI did not respond", true);
       }
     } catch (error) {
       elements.connectButton.disabled = false;
@@ -155,38 +155,38 @@ function setupConnection() {
   elements.disconnectButton.addEventListener("click", async () => {
     await serial.disconnect();
     setConnected(false);
-    appendConsole("\n[USB frakoblet]\n");
+    appendConsole("\n[USB disconnected]\n");
   });
 }
 
 function setupFlasher() {
   if (flasher.supported) {
-    elements.flashSupport.textContent = "Web Serial tilgjengelig";
+    elements.flashSupport.textContent = "Web Serial available";
     elements.flashSupport.classList.add("good");
   } else {
-    elements.flashSupport.textContent = "Web Serial mangler";
+    elements.flashSupport.textContent = "Web Serial unavailable";
     elements.flashSupport.classList.add("warn");
   }
 
   elements.enterDfuButton.addEventListener("click", () => runFlashOperation(
-    "Aktiverer DFU-mode …",
+    "Entering DFU mode …",
     async () => {
-      setFlashProgress(10, "Velg sensornodens vanlige USB-port");
+      setFlashProgress(10, "Select the sensor node's normal USB port");
       await flasher.enterDfuMode();
-      setFlashProgress(100, "1200-baud reset sendt. Se etter bootloaderport/LED; dette kan ikke bekreftes av nettleseren.");
+      setFlashProgress(100, "1200-baud reset sent. Look for the bootloader port or LED; the browser cannot verify this.");
     }
   ));
 
   elements.flashButton.addEventListener("click", () => runFlashOperation(
-    "Forbereder firmware …",
+    "Preparing firmware …",
     async () => {
       const item = selectedPackage();
       const localFile = elements.localDfuFile.files[0];
-      const onProgress = (percent) => setFlashProgress(percent, "Flasher firmware – ikke koble fra USB");
-      setFlashProgress(2, localFile ? `Kontrollerer ${localFile.name}` : "Laster ned DFU ZIP");
+      const onProgress = (percent) => setFlashProgress(percent, "Flashing firmware – do not disconnect USB");
+      setFlashProgress(2, localFile ? `Checking ${localFile.name}` : "Downloading DFU ZIP");
       if (localFile) await flasher.flashBlob(localFile, onProgress);
       else await flasher.flashAsset(item.assets.dfu, onProgress);
-      setFlashProgress(100, "Firmware ferdig. Noden starter på nytt.");
+      setFlashProgress(100, "Firmware complete. The node is restarting.");
     }
   ));
 
@@ -198,7 +198,7 @@ function setupFlasher() {
     elements.eraseConfirmation.focus();
   });
   elements.eraseConfirmation.addEventListener("input", () => {
-    elements.confirmEraseButton.disabled = elements.eraseConfirmation.value.trim().toUpperCase() !== "SLETT";
+    elements.confirmEraseButton.disabled = elements.eraseConfirmation.value.trim().toUpperCase() !== "ERASE";
   });
   elements.eraseDialog.addEventListener("close", () => {
     if (elements.eraseDialog.returnValue !== "confirm") return;
@@ -206,17 +206,17 @@ function setupFlasher() {
   });
   elements.localDfuFile.addEventListener("change", () => {
     const file = elements.localDfuFile.files[0];
-    if (file) showToast(`Lokal firmware valgt: ${file.name}`);
+    if (file) showToast(`Local firmware selected: ${file.name}`);
   });
   updateFlashControls();
 }
 
 async function eraseSelectedDevice() {
-  await runFlashOperation("Forbereder formatter …", async () => {
+  await runFlashOperation("Preparing formatter …", async () => {
     const item = selectedPackage();
-    setFlashProgress(2, "Laster formatter og kontrollerer SHA-256");
-    await flasher.flashAsset(item.assets.erase, (percent) => setFlashProgress(percent, "Flasher formatter – ikke koble fra USB"));
-    setFlashProgress(100, "Flash slettet. Sett noden i DFU-mode igjen og flash vanlig firmware.");
+    setFlashProgress(2, "Downloading formatter and verifying SHA-256");
+    await flasher.flashAsset(item.assets.erase, (percent) => setFlashProgress(percent, "Flashing formatter – do not disconnect USB"));
+    setFlashProgress(100, "Flash erased. Enter DFU mode again and flash the normal firmware.");
   });
 }
 
@@ -225,17 +225,17 @@ async function runFlashOperation(initialStatus, operation) {
   try {
     if (serial.connected) {
       await serial.disconnect();
-      setConnected(false, "CLI-porten ble lukket for flashing");
-      appendConsole("\n[CLI-port lukket før flashing]\n");
+      setConnected(false, "The CLI port was closed for flashing");
+      appendConsole("\n[CLI port closed before flashing]\n");
     }
     setFlashBusy(true);
     elements.flashProgressWrap.hidden = false;
     setFlashProgress(0, initialStatus);
     await operation();
-    showToast("USB-operasjonen er fullført");
+    showToast("USB operation completed");
   } catch (error) {
     const message = friendlyFlashError(error);
-    setFlashProgress(0, `Feil: ${message}`);
+    setFlashProgress(0, `Error: ${message}`);
     showError(new Error(message));
   } finally {
     setFlashBusy(false);
@@ -266,23 +266,23 @@ function setFlashProgress(percent, status) {
 }
 
 function friendlyFlashError(error) {
-  if (error?.name === "NotFoundError") return "Ingen USB-port ble valgt.";
-  if (error?.name === "InvalidStateError") return "USB-porten er opptatt. Koble fra konfiguratoren eller andre terminaler og prøv igjen.";
-  if (error?.name === "NetworkError") return "Kunne ikke åpne USB-porten. Kontroller DFU-mode og prøv igjen.";
-  return error?.message || "Ukjent feil under flashing.";
+  if (error?.name === "NotFoundError") return "No USB port was selected.";
+  if (error?.name === "InvalidStateError") return "The USB port is busy. Disconnect the configurator or other terminals and try again.";
+  if (error?.name === "NetworkError") return "Could not open the USB port. Check DFU mode and try again.";
+  return error?.message || "Unknown flashing error.";
 }
 
 function setConnected(connected, detail = "") {
   elements.connectionDot.classList.toggle("connected", connected);
   elements.connectionDot.classList.remove("warning");
-  elements.connectionText.textContent = connected ? "USB tilkoblet" : "Ingen enhet tilkoblet";
-  elements.deviceName.textContent = connected ? "Sensornode tilkoblet" : "Ingen port valgt";
-  elements.deviceDetail.textContent = connected ? detail : (detail || "Koble sensornoden til med en USB-datakabel.");
+  elements.connectionText.textContent = connected ? "USB connected" : "No device connected";
+  elements.deviceName.textContent = connected ? "Sensor node connected" : "No port selected";
+  elements.deviceDetail.textContent = connected ? detail : (detail || "Connect the sensor node with a USB data cable.");
   elements.connectButton.disabled = flashBusy || connected || !SerialCli.supported();
   elements.disconnectButton.disabled = !connected;
   document.querySelectorAll("[data-command], [data-command-form] button[type='submit'], #consoleForm button").forEach((node) => { node.disabled = !connected; });
   document.querySelectorAll(".requires-connection").forEach((node) => {
-    node.textContent = connected ? "USB tilkoblet" : "Krever USB";
+    node.textContent = connected ? "USB connected" : "USB required";
     node.classList.toggle("good", connected);
   });
 }
@@ -336,16 +336,16 @@ async function runCommand(command, { sensitive = false, slow = false } = {}) {
   const shownCommand = sensitive ? redactCommand(command) : command;
   appendConsole(`\n› ${shownCommand}\n`);
   elements.commandResult.classList.remove("error");
-  elements.commandResult.textContent = "Venter på svar …";
+  elements.commandResult.textContent = "Waiting for a response …";
   try {
     suppressConsoleData = sensitive;
     const reply = await serial.send(command, slow ? { idleMs: 900, timeoutMs: 12000 } : undefined);
     const safeReply = sensitive ? reply.replaceAll(command, shownCommand) : reply;
-    elements.commandResult.textContent = safeReply || "Kommando sendt. Enheten ga ikke tekstsvar.";
-    elements.connectionText.textContent = "USB og CLI klar";
+    elements.commandResult.textContent = safeReply || "Command sent. The device returned no text response.";
+    elements.connectionText.textContent = "USB and CLI ready";
     elements.connectionDot.classList.remove("warning");
     elements.connectionDot.classList.add("connected");
-    showToast("Kommando fullført");
+    showToast("Command completed");
   } catch (error) {
     elements.commandResult.textContent = error.message;
     elements.commandResult.classList.add("error");
@@ -360,7 +360,7 @@ function setupMacFormatting() {
     input.addEventListener("input", () => {
       const hex = input.value.replace(/[^0-9a-f]/gi, "").slice(0, 12).toUpperCase();
       input.value = hex.match(/.{1,2}/g)?.join(":") || "";
-      input.setCustomValidity(hex.length === 0 || hex.length === 12 ? "" : "MAC-adressen må ha 12 heksadesimale tegn.");
+      input.setCustomValidity(hex.length === 0 || hex.length === 12 ? "" : "The MAC address must contain 12 hexadecimal characters.");
     });
   });
 }
@@ -389,13 +389,13 @@ function appendConsole(text) {
 }
 
 function appendFlashLog({ timestamp, message }) {
-  if (elements.flashLog.textContent === "Ingen DFU-operasjon startet.") elements.flashLog.textContent = "";
+  if (elements.flashLog.textContent === "No DFU operation started.") elements.flashLog.textContent = "";
   elements.flashLog.textContent += `[${formatTime(timestamp)}] ${message}\n`;
   elements.flashLog.scrollTop = elements.flashLog.scrollHeight;
 }
 
 function showError(error) {
-  appendConsole(`\n[Feil: ${error.message}]\n`);
+  appendConsole(`\n[Error: ${error.message}]\n`);
   showToast(error.message, true);
 }
 
@@ -408,6 +408,6 @@ function showToast(message, error = false) {
 }
 
 function hex4(value) { return value.toString(16).toUpperCase().padStart(4, "0"); }
-function formatTime(value) { return value.toLocaleTimeString("nb-NO", { hour12: false }); }
+function formatTime(value) { return value.toLocaleTimeString("en-GB", { hour12: false }); }
 function firstLine(value) { return value.split(/\r?\n/, 1)[0].slice(0, 90); }
 function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]); }

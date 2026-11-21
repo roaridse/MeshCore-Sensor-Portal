@@ -13,33 +13,33 @@ export class Nrf52Flasher {
 
   async enterDfuMode() {
     this.assertSupported();
-    this.log("Velg sensornodens vanlige USB-port for 1200-baud reset.");
+    this.log("Select the sensor node's normal USB port for the 1200-baud reset.");
     const port = await this.serial.requestPort({});
     const info = port.getInfo();
-    this.log(`Valgt ${formatPortInfo(info)}. Sender 1200-baud touch-reset.`);
+    this.log(`Selected ${formatPortInfo(info)}. Sending 1200-baud touch reset.`);
     if (info.usbVendorId === 0x239a && info.usbProductId !== 0x8029) {
-      this.log("Merk: RAK4631-applikasjonsporten er normalt 239A:8029.");
+      this.log("Note: the RAK4631 application port is normally 239A:8029.");
     }
     await Dfu.forceDfuMode(port);
-    this.log("Reset-signalet er sendt. Nettleseren kan ikke bekrefte at bootloaderen startet; se etter en ny USB-port eller pulserende LED.");
+    this.log("The reset signal was sent. The browser cannot verify that the bootloader started; look for a new USB port or a pulsing LED.");
   }
 
   async flashAsset(asset, onProgress = () => {}) {
-    this.log(`Laster ${asset.url}.`);
+    this.log(`Downloading ${asset.url}.`);
     const blob = await downloadVerifiedBlob(asset, this.fetchImpl);
-    this.log(`Firmware lastet (${formatBytes(blob.size)})${asset.sha256 ? " og SHA-256 godkjent" : ""}.`);
+    this.log(`Firmware downloaded (${formatBytes(blob.size)})${asset.sha256 ? " and SHA-256 verified" : ""}.`);
     return this.flashBlob(blob, onProgress);
   }
 
   async flashBlob(blob, onProgress = () => {}) {
     this.assertSupported();
-    if (!(blob instanceof Blob) || blob.size === 0) throw new Error("DFU ZIP-filen er tom eller ugyldig.");
-    this.log(`Velg DFU/bootloader-porten for ${formatBytes(blob.size)} firmware.`);
+    if (!(blob instanceof Blob) || blob.size === 0) throw new Error("The DFU ZIP file is empty or invalid.");
+    this.log(`Select the DFU/bootloader port for the ${formatBytes(blob.size)} firmware image.`);
     const port = await this.serial.requestPort({});
     const info = port.getInfo();
-    this.log(`Valgt ${formatPortInfo(info)}. Åpner Nordic serial DFU.`);
+    this.log(`Selected ${formatPortInfo(info)}. Opening Nordic serial DFU.`);
     if (info.usbVendorId === 0x239a && info.usbProductId === 0x8029) {
-      this.log("239A:8029 er applikasjonsporten. Aktiver DFU først; bootloaderen bruker normalt 239A:0029 eller 239A:002A.");
+      this.log("239A:8029 is the application port. Enter DFU mode first; the bootloader normally uses 239A:0029 or 239A:002A.");
     }
     const dfu = new Dfu(port);
     this.lastProgressStep = -1;
@@ -48,15 +48,15 @@ export class Nrf52Flasher {
         this.logProgress(percent);
         onProgress(percent);
       });
-      this.log("DFU-overføringen er fullført.");
+      this.log("DFU transfer completed.");
     } catch (error) {
-      this.log(`DFU feilet: ${error.message}`);
+      this.log(`DFU failed: ${error.message}`);
       throw error;
     }
   }
 
   assertSupported() {
-    if (!this.supported) throw new Error("Web Serial støttes ikke av denne nettleseren.");
+    if (!this.supported) throw new Error("Web Serial is not supported by this browser.");
   }
 
   log(message) {
@@ -67,22 +67,22 @@ export class Nrf52Flasher {
     const step = Math.floor(percent / 10) * 10;
     if (step !== this.lastProgressStep) {
       this.lastProgressStep = step;
-      this.log(`DFU fremdrift: ${Math.min(100, step)} %.`);
+      this.log(`DFU progress: ${Math.min(100, step)}%.`);
     }
   }
 }
 
 export async function downloadVerifiedBlob(asset, fetchImpl = globalThis.fetch) {
-  if (!asset?.url) throw new Error("Firmwarepakken mangler en DFU-adresse.");
+  if (!asset?.url) throw new Error("The firmware package does not contain a DFU URL.");
   const response = await fetchImpl(asset.url, { cache: "no-store" });
-  if (!response.ok) throw new Error(`Kunne ikke laste ned firmware (HTTP ${response.status}).`);
+  if (!response.ok) throw new Error(`Could not download firmware (HTTP ${response.status}).`);
   const buffer = await response.arrayBuffer();
-  if (buffer.byteLength === 0) throw new Error("Nedlastet firmwarefil er tom.");
+  if (buffer.byteLength === 0) throw new Error("The downloaded firmware file is empty.");
 
   if (asset.sha256) {
     const actual = await sha256Hex(buffer);
     if (actual !== asset.sha256.toLowerCase()) {
-      throw new Error("SHA-256-kontrollen feilet. Filen blir ikke flashet.");
+      throw new Error("SHA-256 verification failed. The file will not be flashed.");
     }
   }
 
@@ -90,7 +90,7 @@ export async function downloadVerifiedBlob(asset, fetchImpl = globalThis.fetch) 
 }
 
 export async function sha256Hex(data) {
-  if (!globalThis.crypto?.subtle) throw new Error("Nettleseren kan ikke kontrollere firmware-checksum.");
+  if (!globalThis.crypto?.subtle) throw new Error("The browser cannot verify the firmware checksum.");
   const digest = await globalThis.crypto.subtle.digest("SHA-256", data);
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }

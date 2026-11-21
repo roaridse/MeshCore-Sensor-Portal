@@ -11,7 +11,7 @@ assert.equal(blob.size, 3);
 
 await assert.rejects(
   downloadVerifiedBlob({ url: "https://example.test/firmware.zip", sha256: "0".repeat(64) }, fetchOk),
-  /SHA-256-kontrollen feilet/
+  /SHA-256 verification failed/
 );
 
 await assert.rejects(
@@ -19,4 +19,4 @@ await assert.rejects(
   /HTTP 404/
 );
 
-console.log("Flasher checksum- og nedlastingstester passerte.");
+console.log("Flasher checksum and download tests passed.");
