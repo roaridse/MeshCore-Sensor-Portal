@@ -1,0 +1,194 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#08141c">
+    <meta name="description" content="MeshCore sensor firmware CLI commands and Cayenne LPP telemetry channel reference.">
+    <title>CLI &amp; channel guide · MeshCore Sensor Portal</title>
+    <link rel="stylesheet" href="assets/styles.css">
+  </head>
+  <body class="docs-page">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Back to MeshCore Sensor Portal">
+        <span class="brand-mark" aria-hidden="true">MC</span>
+        <span><strong>Sensor Portal</strong><small>CLI &amp; channel guide</small></span>
+      </a>
+      <div class="header-tools">
+        <nav class="header-nav" aria-label="Site navigation">
+          <a class="header-link" href="index.html">Portal</a>
+          <a class="header-link" href="status.html">Status</a>
+        </nav>
+        <div class="connection-summary"><span class="status-dot" aria-hidden="true"></span><span>Documentation</span></div>
+      </div>
+    </header>
+
+    <main class="docs-main" id="top">
+      <section class="docs-hero">
+        <p class="eyebrow">Firmware reference</p>
+        <h1>Commands and<br><span>telemetry channels.</span></h1>
+        <p class="hero-copy">A practical reference for configuring a sensor node and decoding the Cayenne LPP values returned to a MeshCore Companion.</p>
+        <nav class="docs-nav" aria-label="On this page">
+          <a href="#commands">CLI commands</a>
+          <a href="#telemetry">LPP channels</a>
+          <a href="#status-channel">Private status channel</a>
+        </nav>
+      </section>
+
+      <section class="panel docs-section" id="commands">
+        <p class="eyebrow">Configuration</p>
+        <h2>CLI commands</h2>
+        <p>Send commands from the portal console over direct USB or through an authenticated Companion connection. A serial terminal can also be used at <code>115200 baud</code>. Sensor labels are limited to 15 characters without spaces.</p>
+
+        <div class="docs-grid">
+          <article class="docs-card"><h3>Start here</h3><p>Run <code>ver</code> to test the connection, <code>help</code> for the upstream MeshCore command list, then set a unique node name and administrator password.</p></article>
+          <article class="docs-card"><h3>Keep keys private</h3><p>The Victron and channel keys are saved on the node. The list and info commands redact them, but a terminal or browser console may retain the command itself.</p></article>
+        </div>
+
+        <h3>Node</h3>
+        <div class="table-wrap"><table class="docs-table">
+          <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code class="command">ver</code></td><td>Shows the firmware version and confirms that the CLI responds.</td></tr>
+            <tr><td><code class="command">help</code></td><td>Lists the standard MeshCore commands available in this firmware.</td></tr>
+            <tr><td><code class="command">set name Cabin-Sensor</code></td><td>Sets the node advertisement name.</td></tr>
+            <tr><td><code class="command">password NEW-PASSWORD</code></td><td>Changes the administrator password used for remote CLI login. The current MeshCore format stores up to 15 characters.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Ruuvi RAWv2</h3>
+        <div class="table-wrap"><table class="docs-table">
+          <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code class="command">ruuvi scan</code></td><td>Lists recently observed RuuviTags as scan slot, embedded MAC and RSSI.</td></tr>
+            <tr><td><code class="command">ruuvi scan 0</code></td><td>Shows details for scan slot 0.</td></tr>
+            <tr><td><code class="command">ruuvi add MAC NAME</code></td><td>Adds or updates a tag, for example <code>ruuvi add CB:B8:33:4C:88:4F Cabin</code>.</td></tr>
+            <tr><td><code class="command">ruuvi list</code></td><td>Lists the configured tags and whether each has been seen.</td></tr>
+            <tr><td><code class="command">ruuvi remove MAC</code></td><td>Removes a configured tag.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Shelly BLU H&amp;T</h3>
+        <div class="table-wrap"><table class="docs-table">
+          <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code class="command">shelly scan</code></td><td>Lists recently observed unencrypted BTHome v2 sensors. A Shelly can take about a minute to advertise.</td></tr>
+            <tr><td><code class="command">shelly scan 0</code></td><td>Shows details for scan slot 0.</td></tr>
+            <tr><td><code class="command">shelly add MAC NAME</code></td><td>Adds or updates a sensor, for example <code>shelly add AA:BB:CC:DD:EE:FF Bathroom</code>.</td></tr>
+            <tr><td><code class="command">shelly list</code></td><td>Lists the configured sensors and whether each has been seen.</td></tr>
+            <tr><td><code class="command">shelly remove MAC</code></td><td>Removes a configured sensor.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Victron Instant Readout</h3>
+        <div class="table-wrap"><table class="docs-table">
+          <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code class="command">victron add MAC KEY NAME</code></td><td>Adds or updates a device. <code>KEY</code> is the 32-character Instant Readout key from VictronConnect.</td></tr>
+            <tr><td><code class="command">victron list</code></td><td>Lists configured devices, their configuration slot and receive status. Stored keys are redacted.</td></tr>
+            <tr><td><code class="command">victron remove MAC</code></td><td>Removes a configured device.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Private text channel</h3>
+        <div class="table-wrap"><table class="docs-table">
+          <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+          <tbody>
+            <tr><td><code class="command">channel set NAME KEY</code></td><td>Sets the private MeshCore channel name and its 32-hex-character key.</td></tr>
+            <tr><td><code class="command">channel status on|off</code></td><td>Enables or disables periodic readable status messages.</td></tr>
+            <tr><td><code class="command">channel alarms on|off</code></td><td>Enables or disables alarm, recovery and stale-reading messages.</td></tr>
+            <tr><td><code class="command">channel interval MINUTES</code></td><td>Sets the status interval from 15 to 10080 minutes.</td></tr>
+            <tr><td><code class="command">channel info</code></td><td>Shows the channel settings with the key redacted.</td></tr>
+            <tr><td><code class="command">status now</code></td><td>Queues an immediate status update when status messages and a channel are enabled.</td></tr>
+            <tr><td><code class="command">channel clear</code></td><td>Removes the stored private-channel configuration.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section class="panel docs-section" id="telemetry">
+        <p class="eyebrow">MeshCore telemetry</p>
+        <h2>Cayenne LPP channels</h2>
+        <p>Telemetry is returned in encrypted peer responses to a Companion. A numeric Cayenne LPP channel can contain several values when their LPP data types differ—for example voltage, current and power can all use the same channel.</p>
+        <div class="docs-callout"><p><strong>Slot calculation:</strong> the first configured device normally occupies slot 0. Victron uses <code>20 + slot × 8</code>, Ruuvi uses <code>60 + slot × 2</code>, and Shelly uses <code>70 + slot × 2</code>. Removing a device can leave a free slot; use the relevant <code>list</code> command to see the actual slot.</p></div>
+
+        <h3>Node and attached hardware</h3>
+        <div class="table-wrap"><table class="docs-table">
+          <thead><tr><th>Channel</th><th>LPP type</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><code>1</code></td><td>Voltage</td><td>Node supply or battery voltage.</td></tr>
+            <tr><td><code>1</code></td><td>Temperature</td><td>MCU temperature when supported by the board.</td></tr>
+            <tr><td><code>1</code></td><td>GPS</td><td>Node latitude, longitude and altitude when compatible GPS hardware is enabled.</td></tr>
+            <tr><td><code>2+</code></td><td>Varies</td><td>Optional board sensors discovered by MeshCore. These channels depend on the board and attached modules.</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Victron — base channels 20, 28, 36 and 44</h3>
+        <div class="table-wrap"><table class="docs-table">
+          <thead><tr><th>Offset</th><th>Solar charger</th><th>AC charger</th><th>Battery monitor</th></tr></thead>
+          <tbody>
+            <tr><td><code>base</code></td><td colspan="3">Battery voltage (V), current (A) and power (W), using their respective LPP types.</td></tr>
+            <tr><td><code>base + 1</code></td><td>PV power (W)</td><td>Output 2 voltage, current and calculated power</td><td>State of charge (%)</td></tr>
+            <tr><td><code>base + 2</code></td><td>Yield today (kWh)</td><td>Output 3 voltage, current and calculated power</td><td>Consumed capacity (Ah), generic sensor</td></tr>
+            <tr><td><code>base + 3</code></td><td>Device state, generic sensor</td><td>Temperature (°C)</td><td>Time to go (minutes), generic sensor</td></tr>
+            <tr><td><code>base + 4</code></td><td>Charger error, generic sensor</td><td>AC current (A)</td><td>Alarm reason bitmask, generic sensor</td></tr>
+            <tr><td><code>base + 5</code></td><td>—</td><td>Device state, generic sensor</td><td>Starter/midpoint voltage or auxiliary temperature</td></tr>
+            <tr><td><code>base + 6</code></td><td>—</td><td>Charger error, generic sensor</td><td>Auxiliary input type, generic sensor</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Ruuvi — base channels 60, 62, 64 and 66</h3>
+        <div class="table-wrap"><table class="docs-table">
+          <thead><tr><th>Offset</th><th>LPP type</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><code>base</code></td><td>Temperature, relative humidity, barometric pressure</td><td>Temperature (°C), humidity (%) and pressure (hPa).</td></tr>
+            <tr><td><code>base + 1</code></td><td>Voltage</td><td>RuuviTag battery voltage (V).</td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Shelly — base channels 70, 72, 74 and 76</h3>
+        <div class="table-wrap"><table class="docs-table">
+          <thead><tr><th>Offset</th><th>LPP type</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td><code>base</code></td><td>Temperature, relative humidity</td><td>Temperature (°C) and humidity (%).</td></tr>
+            <tr><td><code>base + 1</code></td><td>Percentage</td><td>Battery level (%).</td></tr>
+          </tbody>
+        </table></div>
+
+        <div class="docs-callout"><p>Only readings received within the last 15 minutes are included. Unsupported or absent fields are omitted, so a device does not necessarily populate every channel listed above.</p></div>
+      </section>
+
+      <section class="panel docs-section" id="status-channel">
+        <p class="eyebrow">Human-readable updates</p>
+        <h2>Private status channel</h2>
+        <p>This is separate from Cayenne LPP telemetry. It sends encrypted, readable group text to a configured MeshCore channel. Every receiver that should read it needs the same channel name and key.</p>
+
+        <h3>Status message formats</h3>
+        <div class="table-wrap"><table class="docs-table">
+          <thead><tr><th>Source</th><th>Example output</th></tr></thead>
+          <tbody>
+            <tr><td>Victron battery monitor</td><td><code>STATUS device=SmartShunt type=battery voltage=12.71 current=-0.420 soc=82.3 consumed=-21.5 tgo=640 alarm=0 rssi=-67</code></td></tr>
+            <tr><td>Victron charger</td><td><code>STATUS device=MPPT type=solar voltage=13.82 current=4.1 power=57 state=3 error=0 rssi=-61</code></td></tr>
+            <tr><td>Ruuvi</td><td><code>STATUS device=Cabin type=ruuvi temp=21.4 humidity=46.2 pressure=1008.7 battery=2.991 rssi=-57</code></td></tr>
+            <tr><td>Shelly</td><td><code>STATUS device=Bathroom type=shelly temp=23.1 humidity=51 battery=92 rssi=-70</code></td></tr>
+            <tr><td>No fresh reading</td><td><code>STATUS device=Cabin type=ruuvi available=0</code></td></tr>
+          </tbody>
+        </table></div>
+
+        <h3>Alarm message formats</h3>
+        <div class="table-wrap"><table class="docs-table">
+          <thead><tr><th>Event</th><th>Example output</th></tr></thead>
+          <tbody>
+            <tr><td>Battery alarm</td><td><code>ALARM device=SmartShunt alarm_reason=2</code></td></tr>
+            <tr><td>Battery recovery</td><td><code>RECOVERY device=SmartShunt alarm_reason=0</code></td></tr>
+            <tr><td>Charger error</td><td><code>ALARM device=MPPT charger_error=33</code></td></tr>
+            <tr><td>BLE reading older than 15 minutes</td><td><code>ALARM device=Cabin reason=ble_stale age_min=16</code></td></tr>
+          </tbody>
+        </table></div>
+        <p class="note">Private channel messages are flood messages without delivery acknowledgement. Use the encrypted LPP peer response as the authoritative telemetry path.</p>
+      </section>
+    </main>
+
+    <footer><span>MeshCore Sensor Portal</span><a href="index.html">Back to the portal</a></footer>
+  </body>
+</html>

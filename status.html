@@ -1,0 +1,88 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#08141c">
+    <meta name="description" content="Hardware and sensor compatibility status for MeshCore Sensor firmware.">
+    <title>Compatibility status · MeshCore Sensor Portal</title>
+    <link rel="stylesheet" href="assets/styles.css">
+  </head>
+  <body class="docs-page">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Back to MeshCore Sensor Portal">
+        <span class="brand-mark" aria-hidden="true">MC</span>
+        <span><strong>Sensor Portal</strong><small>Compatibility status</small></span>
+      </a>
+      <div class="header-tools">
+        <nav class="header-nav" aria-label="Site navigation">
+          <a class="header-link" href="index.html">Portal</a>
+          <a class="header-link" href="docs.html">Guide</a>
+        </nav>
+        <div class="connection-summary"><span class="status-dot connected" aria-hidden="true"></span><span>Test status</span></div>
+      </div>
+    </header>
+
+    <main class="docs-main" id="top">
+      <section class="docs-hero">
+        <p class="eyebrow">Compatibility</p>
+        <h1>What has been<br><span>tested and verified.</span></h1>
+        <p class="hero-copy">A hands-on test record for firmware boards and Bluetooth sensor sources. “Build verified” means the firmware compiles, but still needs a real-hardware test.</p>
+        <nav class="docs-nav" aria-label="On this page">
+          <a href="#boards">Firmware boards</a>
+          <a href="#sensors">BLE sensors</a>
+        </nav>
+      </section>
+
+      <section class="panel docs-section" id="boards">
+        <p class="eyebrow">Firmware targets</p>
+        <h2>Sensor node boards</h2>
+        <p>The status below describes actual hardware testing, not only whether a build artifact exists.</p>
+        <div class="status-stack">
+          <article class="status-entry">
+            <h3>RAK4631</h3>
+            <p>Flashing, MeshCore operation, BLE scanning and sensor telemetry have been tested on hardware.</p>
+            <span class="pill good">Tested · working</span>
+          </article>
+          <article class="status-entry">
+            <h3>Heltec T114</h3>
+            <p>The firmware target builds successfully. End-to-end operation still needs to be confirmed on a physical board.</p>
+            <span class="pill warn">Build verified</span>
+          </article>
+          <article class="status-entry">
+            <h3>RAK WisMesh Tag</h3>
+            <p>The firmware target builds successfully. End-to-end operation still needs to be confirmed on physical hardware.</p>
+            <span class="pill warn">Build verified</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel docs-section" id="sensors">
+        <p class="eyebrow">Bluetooth sources</p>
+        <h2>BLE sensors and devices</h2>
+        <p>These devices have been observed, decoded and forwarded through MeshCore by the sensor firmware.</p>
+        <div class="status-stack">
+          <article class="status-entry">
+            <h3>RuuviTag</h3>
+            <p>RAWv2 discovery and temperature, humidity, pressure and battery telemetry are working.</p>
+            <span class="pill good">Tested · working</span>
+          </article>
+          <article class="status-entry">
+            <h3>Shelly BLU H&amp;T</h3>
+            <p>Unencrypted BTHome v2 discovery and temperature, humidity and battery telemetry are working.</p>
+            <span class="pill good">Tested · working</span>
+          </article>
+          <article class="status-entry">
+            <h3>Victron SmartSolar MPPT 100/20</h3>
+            <p>Instant Readout decryption and charger voltage, current, power, yield, state and error telemetry are working.</p>
+            <span class="pill good">Tested · working</span>
+          </article>
+        </div>
+        <div class="docs-callout"><p>Other Victron Instant Readout products and record types are implemented in the firmware, but are not marked as hardware-tested here until they have been verified with a real device.</p></div>
+      </section>
+    </main>
+
+    <footer><span>MeshCore Sensor Portal</span><span>Compatibility status last updated 21 November 2026</span></footer>
+  </body>
+</html>

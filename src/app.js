@@ -3,7 +3,7 @@ import { Nrf52Flasher } from "./flasher.js";
 import { CompanionRemoteCli, bytesToHex } from "./companion.js";
 
 const elements = Object.fromEntries([
-  "connectionDot", "connectionText", "firmwareCount", "catalogStatus", "profileSelect",
+  "connectionDot", "connectionText", "firmwareCount", "boardCount", "catalogStatus", "profileSelect",
   "boardSelect", "versionSelect", "firmwareDetails", "downloadUf2", "downloadDfu",
   "flashSupport", "enterDfuButton", "flashButton", "eraseButton", "localDfuFile",
   "flashProgressWrap", "flashStatus", "flashPercent", "flashProgress", "flashLog", "eraseDialog",
@@ -52,6 +52,7 @@ async function loadCatalog() {
     catalog = await response.json();
     validateCatalog(catalog);
     elements.firmwareCount.textContent = String(catalog.packages.length);
+    elements.boardCount.textContent = String(new Set(catalog.packages.map((item) => item.board.id)).size);
     elements.catalogStatus.textContent = `Updated ${catalog.updated}`;
     elements.catalogStatus.classList.add("good");
     populateProfiles();

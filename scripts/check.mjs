@@ -6,7 +6,7 @@ const sourceRoot = new URL("../", import.meta.url).pathname;
 const root = process.argv[2] ? resolve(process.argv[2]) : sourceRoot;
 const siteMode = process.argv.includes("--site");
 const required = [
-  "index.html", "assets/styles.css", "src/app.js", "src/serial.js", "src/companion.js", "src/flasher.js",
+  "index.html", "docs.html", "status.html", "assets/styles.css", "src/app.js", "src/serial.js", "src/companion.js", "src/flasher.js",
   "catalog/firmware.json", "vendor/meshcore-flasher/dfu.js",
   "vendor/meshcore-flasher/zip.min.js", "vendor/meshcore-flasher/NOTICE.md",
   "vendor/meshcore/meshcore.js", "vendor/meshcore/NOTICE.md", "vendor/meshcore/LICENSE",
@@ -18,6 +18,18 @@ await Promise.all(required.map((file) => access(join(root, file))));
 const html = await readFile(join(root, "index.html"), "utf8");
 for (const marker of ["id=\"firmware\"", "id=\"connect\"", "id=\"configure\"", "id=\"console\""]) {
   if (!html.includes(marker)) throw new Error(`Missing ${marker} in index.html`);
+}
+if (!html.includes("href=\"docs.html\"")) throw new Error("Missing documentation link in index.html");
+if (!html.includes("href=\"status.html\"")) throw new Error("Missing status link in index.html");
+
+const docsHtml = await readFile(join(root, "docs.html"), "utf8");
+for (const marker of ["id=\"commands\"", "id=\"telemetry\"", "id=\"status-channel\""]) {
+  if (!docsHtml.includes(marker)) throw new Error(`Missing ${marker} in docs.html`);
+}
+
+const statusHtml = await readFile(join(root, "status.html"), "utf8");
+for (const marker of ["id=\"boards\"", "id=\"sensors\"", "RAK4631", "RuuviTag", "Shelly BLU H&amp;T", "SmartSolar MPPT 100/20"]) {
+  if (!statusHtml.includes(marker)) throw new Error(`Missing ${marker} in status.html`);
 }
 
 const catalog = JSON.parse(await readFile(join(root, "catalog/firmware.json"), "utf8"));

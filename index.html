@@ -15,22 +15,28 @@
         <span class="brand-mark" aria-hidden="true">MC</span>
         <span><strong>Sensor Portal</strong><small>MeshCore node tools</small></span>
       </a>
-      <div class="connection-summary">
-        <span id="connectionDot" class="status-dot" aria-hidden="true"></span>
-        <span id="connectionText">No device connected</span>
+      <div class="header-tools">
+        <nav class="header-nav" aria-label="Site navigation">
+          <a class="header-link" href="docs.html">Guide</a>
+          <a class="header-link" href="status.html">Status</a>
+        </nav>
+        <div class="connection-summary">
+          <span id="connectionDot" class="status-dot" aria-hidden="true"></span>
+          <span id="connectionText">No device connected</span>
+        </div>
       </div>
     </header>
 
     <main id="top">
       <section class="hero">
         <div>
-          <p class="eyebrow">MeshCore sensor firmware for RAK WisBlock</p>
-          <h1>Turn a RAK4631 into a<br><span>MeshCore sensor node.</span></h1>
-          <p class="hero-copy">Firmware v0.3.1 reads Victron Instant Readout, Ruuvi RAWv2, and Shelly BLU H&amp;T over Bluetooth. Sensor values are sent through MeshCore as Cayenne LPP, with a private status channel for node updates.</p>
+          <p class="eyebrow">MeshCore sensor firmware</p>
+          <h1>Make a MeshCore<br><span>sensor node.</span></h1>
+          <p class="hero-copy">Read Victron Instant Readout, Ruuvi RAWv2, and Shelly BLU H&amp;T over Bluetooth. Sensor values are sent through MeshCore as Cayenne LPP, with an optional private status channel for readable node updates.</p>
         </div>
         <div class="hero-status" aria-label="Portal status">
           <div><strong id="firmwareCount">–</strong><span>firmware packages</span></div>
-          <div><strong>RAK4631</strong><span>nRF52840 board</span></div>
+          <div><strong id="boardCount">–</strong><span>supported boards</span></div>
           <div><strong>3</strong><span>BLE sensor types</span></div>
         </div>
       </section>
